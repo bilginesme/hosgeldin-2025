@@ -45,7 +45,7 @@ const TrophyTypes = Object.freeze({
 
 function preload() {
    this.load.image('myImage', 'assets/new-year-2024.png');
-   this.load.image('imgBoard', 'assets/test3.png');
+   this.load.image('imgBoard', 'assets/test4.png');
    this.load.image('dice', 'assets/dice.png');
    this.load.audio('backgroundMusic', 'assets/SilentJungleLong.mp3'); // Key: 'backgroundMusic', Path: 'assets/music.mp3'
 }

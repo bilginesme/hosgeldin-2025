@@ -3,7 +3,7 @@ body {
    margin: 0;
    padding: 0;
    overflow: hidden; /* Prevent scrollbars */
-   background-color: #87CEEB; /* Optional background color for the page */
+   background-color: #f32408; /* Optional background color for the page */
 }
 
 /* Make the canvas cover the entire viewport */

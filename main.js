@@ -3,7 +3,7 @@ const config = {
    type: Phaser.CANVAS, // Use WebGL if available, otherwise fallback to Canvas
    width: 400,        // Game width
    height: 800,       // Game height
-   backgroundColor: '#87CEEB', // Light sky blue background
+   backgroundColor: '#f32408', //  background
 
    physics: {
        default: 'arcade',      // Arcade physics
@@ -45,7 +45,9 @@ const TrophyTypes = Object.freeze({
 
 function preload() {
    this.load.image('myImage', 'assets/new-year-2024.png');
-   this.load.image('imgBoard', 'assets/test5.png');
+   this.load.image('imgBoard', 'assets/board.png');
+   this.load.image('imgBG', 'assets/bg.png');
+   this.load.image('imgWhite', 'assets/bg-white.png');
    this.load.image('dice', 'assets/dice.png');
    this.load.audio('backgroundMusic', 'assets/SilentJungleLong.mp3'); // Key: 'backgroundMusic', Path: 'assets/music.mp3'
 }
@@ -61,7 +63,12 @@ function create() {
        fontFamily: 'Arial'
    }).setOrigin(0.5);
 
-   const imgBoard = this.add.image(this.scale.width / 2, this.scale.height / 2, 'imgBoard').setInteractive();;
+   const imgWhite = this.add.image(this.scale.width / 2, this.scale.height / 2, 'imgWhite').setInteractive();;
+   const imgBG = this.add.image(this.scale.width / 2, this.scale.height / 2, 'imgBG').setInteractive();;
+   imgBG.setAlpha(0.5);
+
+   const imgBoard = this.add.image(10, 190, 'imgBoard').setInteractive();
+   imgBoard.setOrigin(0, 0);
 
    /*
    // Display the image at the center of the screen
@@ -197,6 +204,8 @@ function createBoardArray() {
    boardArray[26] = TrophyTypes.BONUS;
    boardArray[27] = TrophyTypes.CAREER;
    boardArray[28] = 0;
+   boardArray[29] = TrophyTypes.LOVE;
+   boardArray[30] = TrophyTypes.BONUS;
 }
 
 function getTrophyName(value) {

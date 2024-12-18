@@ -2,6 +2,7 @@
 body {
    margin: 0;
    padding: 0;
+   overflow: hidden; /* Prevent scrollbars */
    background-color: #f32408; /* Optional background color for the page */
    height: 100%; /* Occupies full height */
 }
@@ -12,7 +13,6 @@ canvas {
    width: 100vw;   /* Make canvas width 100% of the viewport */
    height: 100vh;  /* Make canvas height 100% of the viewport */
 }
-
  
 #game-container {
    position: relative;

@@ -4,7 +4,7 @@ const config = {
    width: 400,        // Game width
    height: 800,       // Game height
    backgroundColor: '#f32408', //  background
-
+   parent: 'game-container', // Attach to the wrapper element
    physics: {
        default: 'arcade',      // Arcade physics
        arcade: {
@@ -27,7 +27,6 @@ const config = {
 const game = new Phaser.Game(config);
 var txtDiceResult;
 var txtNumDiceTHrows;
-
 var boardArray = []; 
 const numDiceThrowsMax = 10;
 var numDiceThrows = 0;

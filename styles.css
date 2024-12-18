@@ -15,3 +15,8 @@ canvas {
 }
 
  
+#game-container {
+   position: relative;
+   height: 101%; /* Slightly taller than the viewport */
+   overflow: hidden;
+ }

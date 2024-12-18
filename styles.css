@@ -2,7 +2,6 @@
 body {
    margin: 0;
    padding: 0;
-   overflow: hidden; /* Prevent scrollbars */
    background-color: #f32408; /* Optional background color for the page */
    height: 100%; /* Occupies full height */
 }

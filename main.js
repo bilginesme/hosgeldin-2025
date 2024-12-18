@@ -33,6 +33,8 @@ const numDiceThrowsMax = 10;
 var numDiceThrows = 0;
 var isGameOver = false;
 var posPlayer = -1;
+var imgDice;
+var isDiceRollingNow = false;
 
 const TrophyTypes = Object.freeze({
    NONE: 0,
@@ -50,6 +52,9 @@ function preload() {
    this.load.image('imgWhite', 'assets/bg-white.png');
    this.load.image('dice', 'assets/dice.png');
    this.load.audio('backgroundMusic', 'assets/SilentJungleLong.mp3'); // Key: 'backgroundMusic', Path: 'assets/music.mp3'
+   for(var i = 1; i <= 6; i++) {
+      this.load.image('imgDice' + i, 'assets/dice-' + i + '.png');
+   }
 }
 
 // Create the game (initial setup)
@@ -69,6 +74,25 @@ function create() {
 
    const imgBoard = this.add.image(10, 190, 'imgBoard').setInteractive();
    imgBoard.setOrigin(0, 0);
+
+
+   imgDice = this.add.image(260, 360, 'imgDice6').setInteractive();;
+
+   imgDice.on('pointerdown', () => {
+      if(isDiceRollingNow) {
+         console.log('Already running');
+         return;
+      }
+      
+      startDiceRollAnimation(this);
+      imgDice.setTint(0x000000); // Apply a tint to indicate press
+      imgDice.setAlpha(0.8); 
+   });
+
+   imgDice.on('pointerup', () => {
+      imgDice.clearTint();       // Remove the tint
+      imgDice.setAlpha(1);       // Reset the scale
+   });
 
    /*
    // Display the image at the center of the screen
@@ -106,11 +130,14 @@ function create() {
    });
 
    // Add a visual prompt for interaction (optional)
+   /*
    txtDiceResult = this.add.text(this.scale.width / 2, this.scale.height / 2, 'Tap to Start', {
       fontSize: '24px',
       color: '#ffffff',
       fontFamily: 'Arial'
    }).setOrigin(0.5);
+   */
+
 
    txtDiceResult = this.add.text(300, 50, 'RESULT', {
    fontSize: '12px',
@@ -148,7 +175,7 @@ function createDice() {
    });
 }
 
-function diceRoll() {
+function diceRollOBSOLETE() {
    if(isGameOver) {
       alert('Game over');
       return;
@@ -168,6 +195,57 @@ function diceRoll() {
 
    numDiceThrows++;
    txtNumDiceTHrows.setText(numDiceThrows);
+
+   if(numDiceThrows == numDiceThrowsMax) {
+      isGameOver = true;
+   }
+}
+
+function startDiceRollAnimation() {
+   isDiceRollingNow = true;   
+   const animationDuration = 2000; // Total duration in milliseconds
+   const interval = 100; // Time interval in milliseconds
+   let elapsedTime = 0;
+ 
+   const finalRoll = Phaser.Math.Between(1, 6);
+
+   // Start the animation with setInterval
+   const timer = setInterval(() => {
+     // Select a random dice texture
+     const randomIndex = Phaser.Math.Between(1, 6);
+     imgDice.setTexture('imgDice' + randomIndex);
+ 
+     // Update elapsed time
+     elapsedTime += interval;
+ 
+     // Stop the animation after the specified duration
+     if (elapsedTime >= animationDuration) {
+       clearInterval(timer);
+ 
+       // Optionally, set the final texture based on your game's logic
+   
+       imgDice.setTexture('imgDice' + finalRoll);
+       isDiceRollingNow = false;
+
+       diceRoll(finalRoll);
+     }
+   }, interval);
+}
+
+function diceRoll(diceNumber) {
+   posPlayer+= diceNumber;
+   if(posPlayer > (boardArray.length - 1)) {
+      posPlayer = posPlayer - (boardArray.length);
+   }
+
+   console.log('posPlayer = ' + posPlayer);
+   console.log('TROPHY = ' + getTrophyName(boardArray[posPlayer]));
+
+   numDiceThrows++;
+   txtNumDiceTHrows.setText(numDiceThrows);
+
+
+   txtDiceResult.setText(posPlayer + ' -- ' + getTrophyName(boardArray[posPlayer]));
 
    if(numDiceThrows == numDiceThrowsMax) {
       isGameOver = true;

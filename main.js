@@ -352,9 +352,31 @@ function createChristmassBalls() {
       moveBall(); // Start the animation
   };
 
+  const addJumpInteraction = (ball) => {
+   ball.setInteractive(); // Enable input on the ball
+   ball.on('pointerdown', () => {
+       scene.tweens.add({
+           targets: ball,
+           y: ball.y - Phaser.Math.Between(20, 60),
+           angle: Phaser.Math.Between(-3, 3),
+           duration: 300, // Fast jump
+           ease: 'Power2',
+           yoyo: true, // Return back
+           onComplete: () => {
+               animateBall(ball); // Resume the normal animation
+           }
+       });
+
+       const jokeText = scene.add.text(ball.x + 40, ball.y + 120, "Dikkat et \nkırılabilir!", { fontSize: '16px', fill: '#fff' });
+         scene.time.delayedCall(2000, () => jokeText.destroy()); // Remove the text after 1 second
+   });
+};
+
   // Start the animation
   animateBall(imgChristmasBall1);
   animateBall(imgChristmasBall2);
+
+  addJumpInteraction(imgChristmasBall1);
 }
 
 function getTrophyName(value) {

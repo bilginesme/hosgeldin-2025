@@ -29,7 +29,11 @@ let currentScene;
 var txtDiceResult;
 var txtNumDiceTHrows;
 var boardArray = []; 
-var boardCellPositions = []; 
+var boardCellPositions = [];
+var trophySlotPositions = []; 
+var trophyMap = new Map();
+var txtTrophies = [];
+
 const numDiceThrowsMax = 10;
 var numDiceThrows = 0;
 var isGameOver = false;
@@ -40,10 +44,10 @@ var isDiceRollingNow = false;
 
 const TrophyTypes = Object.freeze({
    NONE: 0,
-   MONEY: 1,
-   LOVE: 2,
-   CAREER: 3,
-   HEALTH: 4,
+   PARA: 1,
+   AŞK: 2,
+   BAŞARI: 3,
+   SAĞLIK: 4,
    BONUS: 5
 });
 
@@ -55,6 +59,16 @@ const nameOfThePlayer = urlParams.get('name');
 
 function preload() {
    currentScene = this;
+
+   const font = new FontFace('Luckiest Guy', 'url(assets/fonts/LuckiestGuy-Regular.ttf)');
+
+   font.load().then(() => {
+       // Add the font to the document
+       document.fonts.add(font);
+       console.log('Font loaded locally');
+   }).catch(err => {
+       console.error('Font failed to load:', err);
+   });
 
    this.load.image('imgDot', 'assets/dot.png');   // bunu sonra silelim
    this.load.image('myImage', 'assets/new-year-2024.png');
@@ -98,8 +112,6 @@ function create() {
             this.sound.context.resume();
       }
 
-      console.log(pointer);
-
       // Play the music
       //music.play();
    });
@@ -129,10 +141,27 @@ function create() {
    fontSize: '25px',
    color: '#ffffff'});
 
-   this.add.text(75, 45, 'Bakalım 2025 Ne Getirecek!', {
+   this.add.text(75, 45, 'Bakalım 2025 Ne GETİRECEK!', {
       fontFamily: 'Luckiest Guy',
       fontSize: '20px',
       color: '#ffffff'});
+
+   trophySlotPositions = [];
+   trophySlotPositions.push({x: 100, y: 80});
+   trophySlotPositions.push({x: 230, y: 80});
+   trophySlotPositions.push({x: 100, y: 110});
+   trophySlotPositions.push({x: 230, y: 110});
+
+   trophySlotNature = [];
+   trophySlotNature.push(0);
+   trophySlotNature.push(1);
+   trophySlotNature.push(2);
+   trophySlotNature.push(3);
+
+   txtTrophies = [];
+   for( var i = 0; i < trophySlotPositions.length; i++) {
+      txtTrophies.push(this.add.text(trophySlotPositions[i].x, trophySlotPositions[i].y, '',  {fontFamily: 'Luckiest Guy', fontSize: '20px', color: '#ffffff'}));
+   }
 }
 
 function update(time, delta) {
@@ -141,7 +170,8 @@ function update(time, delta) {
 
 function createDice() {
    let scene = currentScene; // Use the global scene variable
-   imgDice = scene.add.image(270, 320, 'imgDice6').setInteractive();
+   imgDice = scene.add.image(270, 320, 'imgDice1').setInteractive();
+   imgDice.angle = 15;
 
    imgDice.on('pointerdown', () => {
       if(isDiceRollingNow) {
@@ -207,8 +237,25 @@ function diceRoll(diceNumber) {
 
    numDiceThrows++;
    txtNumDiceTHrows.setText(numDiceThrows);
-
    txtDiceResult.setText(posPlayer + ' -- ' + getTrophyName(boardArray[posPlayer]));
+   if(boardArray[posPlayer] != 0) {
+      var tt = boardArray[posPlayer];
+    
+      if (trophyMap.has(tt)) {
+         trophyMap.set(tt, trophyMap.get(tt) + 1);
+      } else {
+         trophyMap.set(tt, 1);
+      }
+  
+     //const sortedArray = Array.from(trophyMap).sort((a, b) => b[1] - a[1]); // Descending order
+     //console.log(sortedArray);
+     //trophyMap = new Map(sortedArray);
+
+     trophyMap = sortTrophiesByHits(trophyMap);
+     console.log(trophyMap);
+
+     drawTrophies();
+   }
 
    if(numDiceThrows == numDiceThrowsMax) {
       isGameOver = true;
@@ -240,33 +287,33 @@ function createBoardArray() {
    boardArray[0] = 0;
    boardArray[1] = 0;
    boardArray[2] = 0;
-   boardArray[3] = TrophyTypes.HEALTH;
+   boardArray[3] = TrophyTypes.SAĞLIK;
    boardArray[4] = 0;
-   boardArray[5] = TrophyTypes.LOVE;
+   boardArray[5] = TrophyTypes.AŞK;
    boardArray[6] = 0;
    boardArray[7] = 0;
    boardArray[8] = 0;
    boardArray[9] = 0;
    boardArray[10] = 0;
-   boardArray[11] = TrophyTypes.MONEY;
+   boardArray[11] = TrophyTypes.PARA;
    boardArray[12] = 0;
    boardArray[13] = 0;
    boardArray[14] = TrophyTypes.BONUS;
    boardArray[15] = 0;
    boardArray[16] = 0;
    boardArray[17] = 0;
-   boardArray[18] = TrophyTypes.CAREER;
+   boardArray[18] = TrophyTypes.BAŞARI;
    boardArray[19] = 0;
    boardArray[20] = 0;
-   boardArray[21] = TrophyTypes.LOVE;
+   boardArray[21] = TrophyTypes.AŞK;
    boardArray[22] = 0;
-   boardArray[23] = TrophyTypes.HEALTH;
+   boardArray[23] = TrophyTypes.SAĞLIK;
    boardArray[24] = 0;
-   boardArray[25] = TrophyTypes.MONEY;
+   boardArray[25] = TrophyTypes.PARA;
    boardArray[26] = TrophyTypes.BONUS;
-   boardArray[27] = TrophyTypes.CAREER;
+   boardArray[27] = TrophyTypes.BAŞARI;
    boardArray[28] = 0;
-   boardArray[29] = TrophyTypes.LOVE;
+   boardArray[29] = TrophyTypes.AŞK;
    boardArray[30] = TrophyTypes.BONUS;
 
    boardCellPositions[0] = {x: 54, y:660 };
@@ -306,16 +353,16 @@ function createBoardArray() {
       var trophy = boardArray[i];
       var strImg = '';
 
-      if(trophy == TrophyTypes.MONEY) {
+      if(trophy == TrophyTypes.PARA) {
          strImg = 'imgTrophyMoney';
       }
-      else if(trophy == TrophyTypes.LOVE) {
+      else if(trophy == TrophyTypes.AŞK) {
          strImg = 'imgTrophyLove';
       }
-      else if(trophy == TrophyTypes.HEALTH) {
+      else if(trophy == TrophyTypes.SAĞLIK) {
          strImg = 'imgTrophyHealth';
       }
-      else if(trophy == TrophyTypes.CAREER) {
+      else if(trophy == TrophyTypes.BAŞARI) {
          strImg = 'imgTrophyCareer';
       }
       else if(trophy == TrophyTypes.BONUS) {
@@ -428,4 +475,46 @@ function movePawn(pawn, points) {
    }
 
    moveToNextPoint();
+}
+
+function sortTrophiesByHits(tM) {
+   const sortedArray = Array.from(tM).sort((a, b) => b[1] - a[1]); // Descending order
+   return new Map(sortedArray);
+}
+
+function drawTrophies() {
+   let scene = currentScene; // Use the global scene variable
+
+   for( var i = 0; i < trophySlotPositions.length; i++) {
+      txtTrophies[i].setText('');
+   }
+
+
+   var idxSlot = 0;
+   trophyMap.forEach((value, key) => {
+      console.log(`Trophy: ${key}, Count: ${value}`);
+
+      var strTrophy = getTrophyName(key);
+
+      if(value == 2) {
+         strTrophy+= ' x2';
+      }
+      else if(value == 3) {
+         strTrophy+= ' x2';
+      }
+      else if(value == 4) {
+         strTrophy+= ' x4';
+      }
+
+      console.log(key);
+      console.log(value);
+      console.log(idxSlot);
+      console.log(strTrophy);
+
+      txtTrophies[idxSlot].setText(strTrophy);
+
+      idxSlot++;
+  });
+
+
 }

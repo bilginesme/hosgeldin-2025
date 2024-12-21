@@ -47,6 +47,12 @@ const TrophyTypes = Object.freeze({
    BONUS: 5
 });
 
+// Get the query parameters from the URL
+const urlParams = new URLSearchParams(window.location.search);
+
+// Get the 'name' parameter value
+const nameOfThePlayer = urlParams.get('name');
+
 function preload() {
    currentScene = this;
 
@@ -98,13 +104,13 @@ function create() {
       //music.play();
    });
 
-   txtDiceResult = this.add.text(300, 50, 'RESULT', {
+   txtDiceResult = this.add.text(300, 750, 'RESULT', {
    fontSize: '12px',
    color: '#ffffff',
    fontFamily: 'Arial'
    }).setOrigin(0.5);
 
-   txtNumDiceTHrows = this.add.text(350, 50, numDiceThrows.toString(), {
+   txtNumDiceTHrows = this.add.text(350, 750, numDiceThrows.toString(), {
       fontSize: '12px',
       color: '#ffffff',
       fontFamily: 'Arial'
@@ -117,6 +123,16 @@ function create() {
   imgPawn.setOrigin(0.5, 0.9);
 
   createChristmassBalls();
+
+  this.add.text(75, 15, 'Merhaba ' + nameOfThePlayer, {
+   fontFamily: 'Luckiest Guy',
+   fontSize: '25px',
+   color: '#ffffff'});
+
+   this.add.text(75, 45, 'Bakalım 2025 Ne Getirecek!', {
+      fontFamily: 'Luckiest Guy',
+      fontSize: '20px',
+      color: '#ffffff'});
 }
 
 function update(time, delta) {
@@ -318,7 +334,7 @@ function createChristmassBalls() {
    imgChristmasBall1 = scene.add.image(50, -20, 'imgChristmasBall1').setInteractive();
    imgChristmasBall1.setOrigin(0.5, 0);
 
-   imgChristmasBall2 = scene.add.image(350, -20, 'imgChristmasBall1').setInteractive();
+   imgChristmasBall2 = scene.add.image(370, -20, 'imgChristmasBall1').setInteractive();
    imgChristmasBall2.setOrigin(0.5, 0);
    imgChristmasBall2.scale = 0.7;
 

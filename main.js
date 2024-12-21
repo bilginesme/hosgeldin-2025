@@ -60,15 +60,15 @@ const nameOfThePlayer = urlParams.get('name');
 function preload() {
    currentScene = this;
 
-   const font = new FontFace('Luckiest Guy', 'url(assets/fonts/LuckiestGuy-Regular.ttf)');
+ const font = new FontFace('Luckiest Guy', 'url(assets/fonts/LuckiestGuy-Regular.ttf)');
 
-   font.load().then(() => {
-       // Add the font to the document
-       document.fonts.add(font);
-       console.log('Font loaded locally');
-   }).catch(err => {
-       console.error('Font failed to load:', err);
-   });
+    font.load().then(() => {
+        // Add the font to the document
+        document.fonts.add(font);
+        console.log('Font loaded locally');
+    }).catch(err => {
+        console.error('Font failed to load:', err);
+    });
 
    this.load.image('imgDot', 'assets/dot.png');   // bunu sonra silelim
    this.load.image('myImage', 'assets/new-year-2024.png');
@@ -76,6 +76,7 @@ function preload() {
    this.load.image('imgBoard', 'assets/board.png');
    this.load.image('imgBG', 'assets/bg.jpg');
    this.load.image('imgWhite', 'assets/bg-white.png');
+   this.load.image('imgDashedLine', 'assets/dashed-line.png');
    this.load.audio('backgroundMusic', 'assets/SilentJungleLong.mp3'); // Key: 'backgroundMusic', Path: 'assets/music.mp3'
    for(var i = 1; i <= 6; i++) {
       this.load.image('imgDice' + i, 'assets/dice-' + i + '.png');
@@ -136,7 +137,7 @@ function create() {
 
   createChristmassBalls();
 
-  this.add.text(75, 15, 'Merhaba ' + nameOfThePlayer, {
+   this.add.text(75, 15, 'Merhaba ' + nameOfThePlayer, {
    fontFamily: 'Luckiest Guy',
    fontSize: '25px',
    color: '#ffffff'});
@@ -145,6 +146,11 @@ function create() {
       fontFamily: 'Luckiest Guy',
       fontSize: '20px',
       color: '#ffffff'});
+
+   const imgDashedLine = this.add.image(74, 78, 'imgDashedLine').setInteractive();
+   imgDashedLine.setOrigin(0, 0);
+   imgDashedLine.scale = 1.15;
+   imgDashedLine.setAlpha(0.5);
 
    trophySlotPositions = [];
    trophySlotPositions.push({x: 100, y: 80});
@@ -430,8 +436,8 @@ function createChristmassBalls() {
            }
        });
 
-       const jokeText = scene.add.text(ball.x + 40, ball.y + 120, "Dikkat et \nkırılabilir!", { fontSize: '16px', fill: '#fff' });
-         scene.time.delayedCall(2000, () => jokeText.destroy()); // Remove the text after 1 second
+       const jokeText = scene.add.text(ball.x - 40, ball.y + 180, "Dikkat et \nkırılabilir!", { fontFamily: 'Luckiest Guy', fontSize: '16px', fill: '#fff' });
+         scene.time.delayedCall(2000, () => jokeText.destroy()); // Remove the text after 2 seconds
    });
 };
 

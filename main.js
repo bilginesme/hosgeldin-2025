@@ -31,8 +31,12 @@ var txtNumDiceTHrows;
 var boardArray = []; 
 var boardCellPositions = [];
 var trophySlotPositions = []; 
+var bonusSlotPositions = []; 
 var trophyMap = new Map();
 var txtTrophies = [];
+var imgBonuses = [];
+var defBonuses = [];
+var bonusDefinitions = [];
 
 const numDiceThrowsMax = 10;
 var numDiceThrows = 0;
@@ -41,6 +45,10 @@ var posPlayer = -1;
 var imgDice;
 var imgPawn;
 var isDiceRollingNow = false;
+
+var isDecreeVisible = false;
+var imgDecreeUp, imgDecreeDown, imgDecreePaper;
+var txtDecree;
 
 const TrophyTypes = Object.freeze({
    NONE: 0,
@@ -89,6 +97,10 @@ function preload() {
    this.load.image('imgTrophyBonus', 'assets/trophy-bonus.png');
 
    this.load.image('imgPawn', 'assets/pawn-yellow.png');
+
+   this.load.image('imgDecreeUp', 'assets/decree-up.png');
+   this.load.image('imgDecreeDown', 'assets/decree-down.png');
+   this.load.image('imgDecreePaper', 'assets/decree-paper.png');
 }
 
 // Create the game (initial setup)
@@ -115,6 +127,12 @@ function create() {
 
       // Play the music
       //music.play();
+   });
+
+   this.input.on('pointerup', (pointer) => {
+      if(isDecreeVisible) {
+         closeDecree();  
+      }
    });
 
    txtDiceResult = this.add.text(300, 750, 'RESULT', {
@@ -164,10 +182,52 @@ function create() {
    trophySlotNature.push(2);
    trophySlotNature.push(3);
 
+   bonusSlotPositions = [];
+   bonusSlotPositions.push({x: 200, y: 150});
+   bonusSlotPositions.push({x: 240, y: 150});
+   bonusSlotPositions.push({x: 280, y: 150});
+
    txtTrophies = [];
    for( var i = 0; i < trophySlotPositions.length; i++) {
       txtTrophies.push(this.add.text(trophySlotPositions[i].x, trophySlotPositions[i].y, '',  {fontFamily: 'Luckiest Guy', fontSize: '20px', color: '#ffffff'}));
    }
+
+   imgBonuses = [];
+   //for( var i = 0; i < bonusSlotPositions.length; i++) {
+   //   imgBonuses.push(this.add.image(bonusSlotPositions[i].x, bonusSlotPositions[i].y, 'imgTrophyBonus').setInteractive());
+   //}
+
+   bonusDefinitions.push('UZUN BİR SEYAHAT.');
+   bonusDefinitions.push('BEKLENMEDİK YERDEN GELEN PARA.');
+   bonusDefinitions.push('UZUN SÜREDİR GÖRMEDİĞİN BİR ARKADAŞI GÖRECEKSİN.');
+   bonusDefinitions.push('UĞUR GETİRECEK BİR GÖKKUŞAĞI.');
+   bonusDefinitions.push('BİR HAYALİN GERÇEKLEŞECEK.');
+   bonusDefinitions.push('YENİ BİR ÇEVREYE KATILACAKSIN.');
+   bonusDefinitions.push('HAYATINI DEĞİŞTİRECEK HARİKA BİR FİLM İZLEYECEKSİN.');
+   bonusDefinitions.push('HAYATINI DEĞİŞTİRECEK HARİKA BİR KİTAP OKUYACAKSIN.');
+   bonusDefinitions.push('HİÇ TAHMİN ETMEDİĞİN BİRİNDEN HEDİYE ALACAKSIN.');
+   bonusDefinitions.push('UZUN SÜREDİR KAYIP OLAN ÇOK SEVDİĞİN BİR EŞYANI BULACAKSIN.');
+   bonusDefinitions.push('BU YIL ÇOK GÜZEL YERLERDE PARK YERİ BULACAKSIN.');
+   bonusDefinitions.push('ÇOK HOŞ BİR FESTİVALE KATILACAKSIN.');
+   bonusDefinitions.push('TANIMADIĞIN BİRİNDEN ÇOK BÜYÜK BİR İYİLİK GÖRECEKSİN.');
+   bonusDefinitions.push('UZUN SÜERDİR ÇÖZEMEDİĞİN BİR ŞEYİ SONUNDA ÇÖZECEKSİN.');
+
+   imgDecreePaper = this.add.image(0, 0, 'imgDecreePaper').setInteractive();
+   imgDecreeUp = this.add.image(0, 0, 'imgDecreeUp').setInteractive();
+   imgDecreeDown = this.add.image(0, 0, 'imgDecreeDown').setInteractive();
+
+   imgDecreePaper.setVisible(false);
+   imgDecreeUp.setVisible(false);
+   imgDecreeDown.setVisible(false);
+
+   txtDecree = this.add.text(100, 250, '', {
+      fontFamily: 'Luckiest Guy',
+      fontSize: '20px',
+      color: '#303040',
+      wordWrap: { width: 220 },
+      align: 'left'
+  });
+  txtDecree.setAlpha(0);
 }
 
 function update(time, delta) {
@@ -180,8 +240,7 @@ function createDice() {
    imgDice.angle = 15;
 
    imgDice.on('pointerdown', () => {
-      if(isDiceRollingNow) {
-         console.log('Already running');
+      if(isDiceRollingNow || isDecreeVisible) {
          return;
       }
       
@@ -253,14 +312,9 @@ function diceRoll(diceNumber) {
          trophyMap.set(tt, 1);
       }
   
-     //const sortedArray = Array.from(trophyMap).sort((a, b) => b[1] - a[1]); // Descending order
-     //console.log(sortedArray);
-     //trophyMap = new Map(sortedArray);
-
      trophyMap = sortTrophiesByHits(trophyMap);
-     console.log(trophyMap);
-
-     drawTrophies();
+     if(tt == TrophyTypes.BONUS) { addBonus(); }
+     else { drawTrophies(); }
    }
 
    if(numDiceThrows == numDiceThrowsMax) {
@@ -298,17 +352,17 @@ function createBoardArray() {
    boardArray[5] = TrophyTypes.AŞK;
    boardArray[6] = 0;
    boardArray[7] = 0;
-   boardArray[8] = 0;
+   boardArray[8] = TrophyTypes.PARA;
    boardArray[9] = 0;
    boardArray[10] = 0;
-   boardArray[11] = TrophyTypes.PARA;
+   boardArray[11] = TrophyTypes.BAŞARI;
    boardArray[12] = 0;
    boardArray[13] = 0;
-   boardArray[14] = TrophyTypes.BONUS;
-   boardArray[15] = 0;
+   boardArray[14] = 0;
+   boardArray[15] = TrophyTypes.BONUS;
    boardArray[16] = 0;
    boardArray[17] = 0;
-   boardArray[18] = TrophyTypes.BAŞARI;
+   boardArray[18] = TrophyTypes.PARA;
    boardArray[19] = 0;
    boardArray[20] = 0;
    boardArray[21] = TrophyTypes.AŞK;
@@ -337,7 +391,7 @@ function createBoardArray() {
    boardCellPositions[12] = {x: 147, y:542 };
    boardCellPositions[13] = {x: 104, y:556 };
    boardCellPositions[14] = {x: 59, y:551 };
-   boardCellPositions[15] = {x: 30, y:499 };
+   boardCellPositions[15] = {x: 32, y:515 };
    boardCellPositions[16] = {x: 37, y:433 };
    boardCellPositions[17] = {x: 77, y:388 };
    boardCellPositions[18] = {x: 127, y:379 };
@@ -495,32 +549,157 @@ function drawTrophies() {
       txtTrophies[i].setText('');
    }
 
-
    var idxSlot = 0;
    trophyMap.forEach((value, key) => {
-      console.log(`Trophy: ${key}, Count: ${value}`);
-
-      var strTrophy = getTrophyName(key);
-
-      if(value == 2) {
-         strTrophy+= ' x2';
+      if(key != TrophyTypes.BONUS) {
+         var strTrophy = getTrophyName(key);
+   
+         if(value == 2) {
+            strTrophy+= ' x2';
+         }
+         else if(value == 3) {
+            strTrophy+= ' x2';
+         }
+         else if(value == 4) {
+            strTrophy+= ' x4';
+         }
+   
+         txtTrophies[idxSlot].setText(strTrophy);
+         idxSlot++;
       }
-      else if(value == 3) {
-         strTrophy+= ' x2';
-      }
-      else if(value == 4) {
-         strTrophy+= ' x4';
-      }
-
-      console.log(key);
-      console.log(value);
-      console.log(idxSlot);
-      console.log(strTrophy);
-
-      txtTrophies[idxSlot].setText(strTrophy);
-
-      idxSlot++;
   });
+}
 
+function addBonus() {
+   let scene = currentScene; // Use the global scene variable
+   
+   var idxBonus = Phaser.Math.Between(0, bonusDefinitions.length-1);
+   var strBonus = bonusDefinitions[idxBonus];
+   
+   openDecree('BONUS \n\n' + strBonus);
+
+   var idxSlot = imgBonuses.length;
+   imgBonuses.push(scene.add.image(bonusSlotPositions[idxSlot].x, bonusSlotPositions[idxSlot].y, 'imgTrophyBonus').setInteractive());
+
+   const animateStar = (star) => {
+      scene.tweens.add({
+          targets: star,
+          angle: Phaser.Math.Between(-15, 15), // Rotate between -15 and 15 degrees
+          scaleX: Phaser.Math.FloatBetween(0.8, 1.2), // Random scale on X axis
+          scaleY: Phaser.Math.FloatBetween(0.8, 1.2), // Random scale on Y axis
+          duration: Phaser.Math.Between(500, 1000), // Random duration between 1-2 seconds
+          ease: 'Sine.easeInOut',
+          repeat: -1, // Infinite loop
+          yoyo: true // Reverse the animation back and forth
+      });
+  };
+
+   var img = imgBonuses[imgBonuses.length - 1];
+   animateStar(img);
+
+   img.on('pointerdown', () => {
+      console.log('Some bonus');
+
+      scene.tweens.add({
+         targets: img,
+         scaleX: 3.0, // Scale up to 1.5 times its size
+         scaleY: 3.0,
+         duration: 500, // Duration of the scaling up
+         yoyo: true, // Return to normal size
+         ease: 'Power1', // Smooth easing effect
+         onComplete: () => {
+            console.log('Clicked and returned to normal size');
+         }
+   });
+
+   });
+}
+
+function openDecree(strText) {
+   let scene = currentScene; // Use the global scene variable
+   var posYStart = 200;
+
+   imgDecreeUp.x = scene.scale.width / 2;
+   imgDecreeUp.y = posYStart;
+   //imgDecreeUp.setAlpha(0.5);
+   imgDecreeUp.setVisible(true);
+
+   imgDecreeDown.x = imgDecreeUp.x;
+   imgDecreeDown.y = imgDecreeUp.y + imgDecreeUp.height + 10;
+   //imgDecreeDown.setAlpha(0.5);
+   imgDecreeDown.setVisible(true);
+
+   imgDecreePaper.x = imgDecreeUp.x;
+   imgDecreePaper.y = imgDecreeUp.y + imgDecreeUp.height / 2 - 10;
+   imgDecreePaper.setOrigin(0.5, 0);
+   imgDecreePaper.setVisible(true);
+   imgDecreePaper.scaleY = 0.05;
+
+   scene.tweens.add({
+      targets: imgDecreePaper,
+      scaleY: 1, 
+      duration: 800, 
+      ease: 'Sine.easeInOut',
+      repeat: 0, 
+      onComplete: () => {
+         isDecreeVisible = true;
+
+         txtDecree.setText(strText);
+         txtDecree.setAlpha(0);
+
+         scene.tweens.add({
+            targets: txtDecree,
+            alpha: 1, // Fade to full visibility
+            duration: 1000, // Duration of 1 second
+            ease: 'Power1', // Easing for smooth animation
+            onComplete: () => {
+                console.log('Fade-in complete!');
+            }
+        });
+        
+     }
+   });
+
+   scene.tweens.add({
+      targets: imgDecreeDown,
+      y: 548, 
+      duration: 800, 
+      ease: 'Sine.easeInOut',
+      repeat: 0, 
+   });
+}
+
+function closeDecree() {
+   let scene = currentScene; // Use the global scene variable
+   console.log('Close decree');
+
+   txtDecree.setText('');
+   txtDecree.setAlpha(0);
+
+   scene.tweens.add({
+      targets: imgDecreePaper,
+      scaleY: 0.05, 
+      duration: 800, 
+      ease: 'Sine.easeInOut',
+      repeat: 0, 
+      onComplete: () => {
+         setTimeout(() => {
+            console.log('This message appears after 2 seconds');
+            isDecreeVisible = false;
+
+            imgDecreeUp.setVisible(false);
+            imgDecreeDown.setVisible(false);
+            imgDecreePaper.setVisible(false);
+        }, 500);
+     }
+   });
+
+   scene.tweens.add({
+      targets: imgDecreeDown,
+      y: imgDecreeUp.y + imgDecreeUp.height + 5, 
+      duration: 800, 
+      ease: 'Sine.easeInOut',
+      repeat: 0, 
+   });
 
 }

@@ -226,8 +226,8 @@ function create() {
   });
   txtDecree.setAlpha(0);
 
-  var txtBilginEsme = this.add.text(270, 760, '© Bilgin Eşme 2025 ', {
-   fontFamily: 'Tahoma',
+  var txtBilginEsme = this.add.text(270, 760, '© Bilgin Eşme 2024 ', {
+   fontFamily: 'Arial',
    fontSize: '14px',
    color: '#FFFFFF'}).setInteractive();
    txtBilginEsme.setAlpha(0.8);
@@ -551,7 +551,7 @@ function drawTrophies() {
             strTrophy+= ' x2';
          }
          else if(value == 3) {
-            strTrophy+= ' x2';
+            strTrophy+= ' x3';
          }
          else if(value == 4) {
             strTrophy+= ' x4';

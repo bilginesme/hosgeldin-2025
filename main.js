@@ -50,6 +50,7 @@ var txtDecree;
 var soundPawn;
 var soundBonus;
 var soundTrophy;
+var soundDice;
 
 const TrophyTypes = Object.freeze({
    NONE: 0,
@@ -103,6 +104,7 @@ function preload() {
    this.load.audio('soundPawn', 'assets/sound/pawn.wav');
    this.load.audio('soundBonus', 'assets/sound/bonus.mp3');
    this.load.audio('soundTrophy', 'assets/sound/trophy.mp3');
+   this.load.audio('soundDice', 'assets/sound/dice.mp3');
 }
 
 
@@ -121,6 +123,7 @@ function create() {
    soundPawn = this.sound.add('soundPawn', {loop: false,  volume: 0.5});
    soundBonus = this.sound.add('soundBonus', {loop: false,  volume: 0.5});
    soundTrophy = this.sound.add('soundTrophy', {loop: false,  volume: 0.5});
+   soundDice = this.sound.add('soundDice', {loop: false,  volume: 0.3});
 
     // Wait for user interaction to start audio
    this.input.once('pointerdown', (pointer) => {
@@ -257,11 +260,12 @@ function createDice() {
  
 function startDiceRollAnimation() {
    isDiceRollingNow = true;   
-   const animationDuration = 2000; // Total duration in milliseconds
+   const animationDuration = 1000; // Total duration in milliseconds
    const interval = 100; // Time interval in milliseconds
    let elapsedTime = 0;
  
    const finalRoll = Phaser.Math.Between(1, 6);
+   soundDice.play();
 
    // Start the animation with setInterval
    const timer = setInterval(() => {

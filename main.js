@@ -26,8 +26,6 @@ const config = {
 // Create the Phaser game instance
 const game = new Phaser.Game(config);
 let currentScene;
-var txtDiceResult;
-var txtNumDiceTHrows;
 var boardArray = []; 
 var boardCellPositions = [];
 var trophySlotPositions = []; 
@@ -37,9 +35,8 @@ var txtTrophies = [];
 var imgBonuses = [];
 var defBonuses = [];
 var bonusDefinitions = [];
+var bonusesObtained = [];
 
-const numDiceThrowsMax = 10;
-var numDiceThrows = 0;
 var isGameOver = false;
 var posPlayer = -1;
 var imgDice;
@@ -50,6 +47,10 @@ var isDecreeVisible = false;
 var imgDecreeUp, imgDecreeDown, imgDecreePaper;
 var txtDecree;
 
+var soundPawn;
+var soundBonus;
+var soundTrophy;
+
 const TrophyTypes = Object.freeze({
    NONE: 0,
    PARA: 1,
@@ -59,10 +60,7 @@ const TrophyTypes = Object.freeze({
    BONUS: 5
 });
 
-// Get the query parameters from the URL
 const urlParams = new URLSearchParams(window.location.search);
-
-// Get the 'name' parameter value
 const nameOfThePlayer = urlParams.get('name');
 
 function preload() {
@@ -96,17 +94,19 @@ function preload() {
    this.load.image('imgTrophyHealth', 'assets/trophy-health.png');
    this.load.image('imgTrophyBonus', 'assets/trophy-bonus.png');
 
-   this.load.image('imgPawn', 'assets/pawn-yellow.png');
+   this.load.image('imgPawn', 'assets/pawn-red.png');
 
    this.load.image('imgDecreeUp', 'assets/decree-up.png');
    this.load.image('imgDecreeDown', 'assets/decree-down.png');
    this.load.image('imgDecreePaper', 'assets/decree-paper.png');
+
+   this.load.audio('soundPawn', 'assets/sound/pawn.wav');
+   this.load.audio('soundBonus', 'assets/sound/bonus.mp3');
+   this.load.audio('soundTrophy', 'assets/sound/trophy.mp3');
 }
 
-// Create the game (initial setup)
-function create() {
-   numDiceThrows = 0;
 
+function create() {
    const imgWhite = this.add.image(this.scale.width / 2, this.scale.height / 2, 'imgWhite').setInteractive();;
    const imgBG = this.add.image(this.scale.width / 2, this.scale.height / 2, 'imgBG').setInteractive();;
 
@@ -117,6 +117,10 @@ function create() {
    loop: true,  // Loop the music
    volume: 0.5  // Set the volume (0.0 to 1.0)
    });
+
+   soundPawn = this.sound.add('soundPawn', {loop: false,  volume: 0.5});
+   soundBonus = this.sound.add('soundBonus', {loop: false,  volume: 0.5});
+   soundTrophy = this.sound.add('soundTrophy', {loop: false,  volume: 0.5});
 
     // Wait for user interaction to start audio
    this.input.once('pointerdown', (pointer) => {
@@ -135,23 +139,11 @@ function create() {
       }
    });
 
-   txtDiceResult = this.add.text(300, 750, 'RESULT', {
-   fontSize: '12px',
-   color: '#ffffff',
-   fontFamily: 'Arial'
-   }).setOrigin(0.5);
-
-   txtNumDiceTHrows = this.add.text(350, 750, numDiceThrows.toString(), {
-      fontSize: '12px',
-      color: '#ffffff',
-      fontFamily: 'Arial'
-      }).setOrigin(0.5);
-
   createDice.call();
   createBoardArray.call();
 
   imgPawn = this.add.image(110, 770, 'imgPawn').setInteractive();
-  imgPawn.setOrigin(0.5, 0.9);
+  imgPawn.setOrigin(0.5, 0.85);
 
   createChristmassBalls();
 
@@ -212,6 +204,8 @@ function create() {
    bonusDefinitions.push('TANIMADIĞIN BİRİNDEN ÇOK BÜYÜK BİR İYİLİK GÖRECEKSİN.');
    bonusDefinitions.push('UZUN SÜERDİR ÇÖZEMEDİĞİN BİR ŞEYİ SONUNDA ÇÖZECEKSİN.');
 
+   bonusesObtained = [];
+
    imgDecreePaper = this.add.image(0, 0, 'imgDecreePaper').setInteractive();
    imgDecreeUp = this.add.image(0, 0, 'imgDecreeUp').setInteractive();
    imgDecreeDown = this.add.image(0, 0, 'imgDecreeDown').setInteractive();
@@ -228,6 +222,12 @@ function create() {
       align: 'left'
   });
   txtDecree.setAlpha(0);
+
+  var txtBilginEsme = this.add.text(290, 750, '© Bilgin Eşme 2025 ', {
+   fontFamily: 'Tahoma',
+   fontSize: '12px',
+   color: '#FFFFFF'}).setInteractive();
+   txtBilginEsme.setAlpha(0.8);
 }
 
 function update(time, delta) {
@@ -244,11 +244,6 @@ function createDice() {
          return;
       }
       
-      if(numDiceThrows >= numDiceThrowsMax) {
-         alert('Game OVER');
-         return;
-      }
-
       startDiceRollAnimation();
       imgDice.setTint(0x000000); // Apply a tint to indicate press
       imgDice.setAlpha(0.8); 
@@ -281,12 +276,8 @@ function startDiceRollAnimation() {
      // Stop the animation after the specified duration
      if (elapsedTime >= animationDuration) {
        clearInterval(timer);
- 
-       // Optionally, set the final texture based on your game's logic
-   
        imgDice.setTexture('imgDice' + finalRoll);
        isDiceRollingNow = false;
-
        diceRoll(finalRoll);
      }
    }, interval);
@@ -298,27 +289,6 @@ function diceRoll(diceNumber) {
    posPlayer+= diceNumber;
    if(posPlayer > (boardArray.length - 1)) {
       posPlayer = posPlayer - (boardArray.length);
-   }
-
-   numDiceThrows++;
-   txtNumDiceTHrows.setText(numDiceThrows);
-   txtDiceResult.setText(posPlayer + ' -- ' + getTrophyName(boardArray[posPlayer]));
-   if(boardArray[posPlayer] != 0) {
-      var tt = boardArray[posPlayer];
-    
-      if (trophyMap.has(tt)) {
-         trophyMap.set(tt, trophyMap.get(tt) + 1);
-      } else {
-         trophyMap.set(tt, 1);
-      }
-  
-     trophyMap = sortTrophiesByHits(trophyMap);
-     if(tt == TrophyTypes.BONUS) { addBonus(); }
-     else { drawTrophies(); }
-   }
-
-   if(numDiceThrows == numDiceThrowsMax) {
-      isGameOver = true;
    }
 
    let points = [];
@@ -512,13 +482,13 @@ function getTrophyName(value) {
 }
 
 let index = 0; // Define outside
-
 function movePawn(pawn, points) {
    let scene = currentScene; // Use the global scene variable
 
    function moveToNextPoint() {
        if (index < points.length) {
            let point = points[index];
+           soundPawn.play();
 
            scene.tweens.add({
                targets: pawn,
@@ -532,6 +502,24 @@ function movePawn(pawn, points) {
                }
            });
        }
+       else {
+
+         console.log('Display the trophy');
+         if(boardArray[posPlayer] != 0) {
+            var tt = boardArray[posPlayer];
+          
+            if (trophyMap.has(tt)) {
+               trophyMap.set(tt, trophyMap.get(tt) + 1);
+            } else {
+               trophyMap.set(tt, 1);
+            }
+        
+           trophyMap = sortTrophiesByHits(trophyMap);
+           if(tt == TrophyTypes.BONUS) { addBonus(); }
+           else { drawTrophies(); }
+         }
+
+       }
    }
 
    moveToNextPoint();
@@ -544,6 +532,7 @@ function sortTrophiesByHits(tM) {
 
 function drawTrophies() {
    let scene = currentScene; // Use the global scene variable
+   soundTrophy.play();
 
    for( var i = 0; i < trophySlotPositions.length; i++) {
       txtTrophies[i].setText('');
@@ -576,6 +565,11 @@ function addBonus() {
    var idxBonus = Phaser.Math.Between(0, bonusDefinitions.length-1);
    var strBonus = bonusDefinitions[idxBonus];
    
+   soundBonus.play();
+
+   bonusesObtained.push(strBonus);
+   bonusDefinitions.splice(idxBonus, 1);
+
    openDecree('BONUS \n\n' + strBonus);
 
    var idxSlot = imgBonuses.length;
@@ -608,7 +602,8 @@ function addBonus() {
          yoyo: true, // Return to normal size
          ease: 'Power1', // Smooth easing effect
          onComplete: () => {
-            console.log('Clicked and returned to normal size');
+            console.log('Clicked and returned to normal size --> ' + idxSlot);
+            openDecree('BONUS \n\n' + bonusesObtained[idxSlot]);
          }
    });
 

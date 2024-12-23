@@ -226,9 +226,9 @@ function create() {
   });
   txtDecree.setAlpha(0);
 
-  var txtBilginEsme = this.add.text(290, 750, '© Bilgin Eşme 2025 ', {
+  var txtBilginEsme = this.add.text(270, 760, '© Bilgin Eşme 2025 ', {
    fontFamily: 'Tahoma',
-   fontSize: '12px',
+   fontSize: '14px',
    color: '#FFFFFF'}).setInteractive();
    txtBilginEsme.setAlpha(0.8);
 }
@@ -600,9 +600,9 @@ function addBonus() {
 
       scene.tweens.add({
          targets: img,
-         scaleX: 3.0, // Scale up to 1.5 times its size
+         scaleX: 3.0, 
          scaleY: 3.0,
-         duration: 500, // Duration of the scaling up
+         duration: 250, // Duration of the scaling up
          yoyo: true, // Return to normal size
          ease: 'Power1', // Smooth easing effect
          onComplete: () => {
@@ -670,7 +670,6 @@ function openDecree(strText) {
 
 function closeDecree() {
    let scene = currentScene; // Use the global scene variable
-   console.log('Close decree');
 
    txtDecree.setText('');
    txtDecree.setAlpha(0);
@@ -678,25 +677,24 @@ function closeDecree() {
    scene.tweens.add({
       targets: imgDecreePaper,
       scaleY: 0.05, 
-      duration: 800, 
+      duration: 400, 
       ease: 'Sine.easeInOut',
       repeat: 0, 
       onComplete: () => {
          setTimeout(() => {
-            console.log('This message appears after 2 seconds');
             isDecreeVisible = false;
 
             imgDecreeUp.setVisible(false);
             imgDecreeDown.setVisible(false);
             imgDecreePaper.setVisible(false);
-        }, 500);
+        }, 300);
      }
    });
 
    scene.tweens.add({
       targets: imgDecreeDown,
       y: imgDecreeUp.y + imgDecreeUp.height + 5, 
-      duration: 800, 
+      duration: 400, 
       ease: 'Sine.easeInOut',
       repeat: 0, 
    });

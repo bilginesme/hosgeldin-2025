@@ -80,13 +80,19 @@ function preload() {
    this.load.image('imgDot', 'assets/dot.png');   // bunu sonra silelim
    this.load.image('myImage', 'assets/new-year-2024.png');
    this.load.image('imgChristmasBall1', 'assets/christmas-ball-1.png');
+   this.load.image('imgChristmasBall2', 'assets/christmas-ball-2.png');
    this.load.image('imgBoard', 'assets/board.png');
-   this.load.image('imgBG', 'assets/bg.jpg');
+   this.load.image('imgBG', 'assets/bg.png');
    this.load.image('imgWhite', 'assets/bg-white.png');
    this.load.image('imgDashedLine', 'assets/dashed-line.png');
    this.load.audio('backgroundMusic', 'assets/SilentJungleLong.mp3'); // Key: 'backgroundMusic', Path: 'assets/music.mp3'
    for(var i = 1; i <= 6; i++) {
       this.load.image('imgDice' + i, 'assets/dice-' + i + '.png');
+   }
+
+   for(var i = 1; i <= 10; i++) {
+      var strN = doubleDigit(i);
+      this.load.image('imgFlake' + strN, 'assets/flake-' + strN + '.png');
    }
 
    this.load.image('imgTrophyMoney', 'assets/trophy-money.png');
@@ -107,10 +113,69 @@ function preload() {
    this.load.audio('soundDice', 'assets/sound/dice.mp3');
 }
 
+ 
 
 function create() {
    const imgWhite = this.add.image(this.scale.width / 2, this.scale.height / 2, 'imgWhite').setInteractive();;
    const imgBG = this.add.image(this.scale.width / 2, this.scale.height / 2, 'imgBG').setInteractive();;
+
+
+   var imgFlake01 = this.add.image(204, 46, 'imgFlake01').setInteractive();
+   var imgFlake02 = this.add.image(95, 98, 'imgFlake02').setInteractive();
+   var imgFlake03 = this.add.image(297, 132, 'imgFlake03').setInteractive();
+   var imgFlake04 = this.add.image(125, 284, 'imgFlake04').setInteractive();
+   var imgFlake05 = this.add.image(136, 477, 'imgFlake05').setInteractive();
+   var imgFlake06 = this.add.image(339, 483, 'imgFlake06').setInteractive();
+   var imgFlake07 = this.add.image(240, 648, 'imgFlake07').setInteractive();
+   var imgFlake08 = this.add.image(50, 730, 'imgFlake08').setInteractive();
+   var imgFlake09 = this.add.image(174, 760, 'imgFlake09').setInteractive();
+   var imgFlake10 = this.add.image(363, 740, 'imgFlake10').setInteractive();
+
+   const animateFlake = (flake) => {
+      const flakeMe = () => {
+          const randomOffset = Phaser.Math.Between(1, 4); // Random stretch
+          const randomDuration = Phaser.Math.Between(1000, 3000); // Random duration
+          const randomAngle = Phaser.Math.Between(-6, 6); // Random swing angle
+          const randomAlpha = Phaser.Math.FloatBetween(0.6, 1.0); // Random swing angle
+
+          // Tween to move the ball down
+          this.tweens.add({
+              targets: flake,
+              y: flake.y + randomOffset, // Move down by random offset
+              angle: randomAngle, // Add random swing
+              duration: randomDuration, // Use random duration
+              alpha: randomAlpha,
+              ease: 'Sine.easeInOut', // Smooth easing
+              onComplete: () => {
+               const randomAlphaReturn = Phaser.Math.FloatBetween(0.6, 1.0); // Random swing angle
+
+                  this.tweens.add({
+                      targets: flake,
+                      y: flake.y - randomOffset, // Move back up
+                      duration: Phaser.Math.Between(1000, 3000), // Random duration for upward motion
+                      angle: -randomAngle, // Swing to the opposite direction
+                      alpha: randomAlphaReturn,
+                      ease: 'Sine.easeInOut',
+                      onComplete: flakeMe // Loop by calling moveBall again
+                  });
+              }
+          });
+      };
+
+      flakeMe(); // Start the animation
+  };
+    
+
+  animateFlake(imgFlake01);
+  animateFlake(imgFlake02);
+  animateFlake(imgFlake03);
+  animateFlake(imgFlake04);
+  animateFlake(imgFlake05);
+  animateFlake(imgFlake06);
+  animateFlake(imgFlake07);
+  animateFlake(imgFlake08);
+  animateFlake(imgFlake09);
+  animateFlake(imgFlake10);
 
    const imgBoard = this.add.image(10, 150, 'imgBoard').setInteractive();
    imgBoard.setOrigin(0, 0);
@@ -142,7 +207,7 @@ function create() {
       }
    });
 
-  createDice.call();
+   createDice.call();
   createBoardArray.call();
 
   imgPawn = this.add.image(110, 770, 'imgPawn').setInteractive();
@@ -231,6 +296,12 @@ function create() {
    fontSize: '14px',
    color: '#FFFFFF'}).setInteractive();
    txtBilginEsme.setAlpha(0.8);
+
+   txtBilginEsme.on('pointerdown', () => {
+      console.log('Share');
+
+      shareGame('Hoşgeldin 2025', 'Yeni yıla eğlenceli bir giriş', 'https://bilginesme.github.io/hosgeldin-2025/');
+   });
 }
 
 function update(time, delta) {
@@ -415,7 +486,7 @@ function createChristmassBalls() {
    imgChristmasBall1 = scene.add.image(50, -20, 'imgChristmasBall1').setInteractive();
    imgChristmasBall1.setOrigin(0.5, 0);
 
-   imgChristmasBall2 = scene.add.image(370, -20, 'imgChristmasBall1').setInteractive();
+   imgChristmasBall2 = scene.add.image(370, -20, 'imgChristmasBall2').setInteractive();
    imgChristmasBall2.setOrigin(0.5, 0);
    imgChristmasBall2.scale = 0.7;
 
@@ -464,7 +535,7 @@ function createChristmassBalls() {
            }
        });
 
-       const jokeText = scene.add.text(ball.x - 40, ball.y + 180, "Dikkat et \nkırılabilir!", { fontFamily: 'Luckiest Guy', fontSize: '16px', fill: '#fff' });
+       const jokeText = scene.add.text(ball.x - 40, ball.y + ball.height, "DİKKAT \nKIRILABİLİR!", { fontFamily: 'Luckiest Guy', fontSize: '16px', fill: '#fff' });
          scene.time.delayedCall(2000, () => jokeText.destroy()); // Remove the text after 2 seconds
    });
 };
@@ -474,6 +545,7 @@ function createChristmassBalls() {
   animateBall(imgChristmasBall2);
 
   addJumpInteraction(imgChristmasBall1);
+  addJumpInteraction(imgChristmasBall2);
 }
 
 function getTrophyName(value) {
@@ -699,4 +771,35 @@ function closeDecree() {
       repeat: 0, 
    });
 
+}
+
+function doubleDigit(n) {
+   var strResult = "";
+
+   if(n < 100 && n > 0) {
+       if(n < 10) 
+           strResult = "0" + n;
+       else
+           strResult = n.toString();
+   }
+
+   return strResult;
+}
+
+async function shareGame(title, text, url) {
+   // Check if the Web Share API is supported
+   if (navigator.share) {
+       try {
+           await navigator.share({
+               title: title,
+               text: text,
+               url: url
+           });
+           console.log('Thanks for sharing!');
+       } catch (error) {
+           console.error('Error sharing:', error);
+       }
+   } else {
+       alert('Sharing is not supported on this device.');
+   }
 }

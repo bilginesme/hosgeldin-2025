@@ -45,12 +45,14 @@ var isDiceRollingNow = false;
 
 var isDecreeVisible = false;
 var imgDecreeUp, imgDecreeDown, imgDecreePaper;
+var imgOracle;
 var txtDecree;
 
 var soundPawn;
 var soundBonus;
 var soundTrophy;
 var soundDice;
+var soundGameOver;
 
 const TrophyTypes = Object.freeze({
    NONE: 0,
@@ -62,7 +64,8 @@ const TrophyTypes = Object.freeze({
 });
 
 const urlParams = new URLSearchParams(window.location.search);
-const nameOfThePlayer = urlParams.get('name');
+let nameOfThePlayer = urlParams.get('name');
+
 
 function preload() {
    currentScene = this;
@@ -77,15 +80,17 @@ function preload() {
         console.error('Font failed to load:', err);
     });
 
-   this.load.image('imgDot', 'assets/dot.png');   // bunu sonra silelim
-   this.load.image('myImage', 'assets/new-year-2024.png');
+
    this.load.image('imgChristmasBall1', 'assets/christmas-ball-1.png');
    this.load.image('imgChristmasBall2', 'assets/christmas-ball-2.png');
    this.load.image('imgBoard', 'assets/board.png');
    this.load.image('imgBG', 'assets/bg.png');
    this.load.image('imgWhite', 'assets/bg-white.png');
    this.load.image('imgDashedLine', 'assets/dashed-line.png');
-   this.load.audio('backgroundMusic', 'assets/SilentJungleLong.mp3'); // Key: 'backgroundMusic', Path: 'assets/music.mp3'
+   this.load.image('imgOracle', 'assets/oracle.png');
+   this.load.audio('backgroundMusic', 'assets/SilentJungleLong.mp3'); 
+   
+
    for(var i = 1; i <= 6; i++) {
       this.load.image('imgDice' + i, 'assets/dice-' + i + '.png');
    }
@@ -111,15 +116,13 @@ function preload() {
    this.load.audio('soundBonus', 'assets/sound/bonus.mp3');
    this.load.audio('soundTrophy', 'assets/sound/trophy.mp3');
    this.load.audio('soundDice', 'assets/sound/dice.mp3');
+   this.load.audio('soundGameOver', 'assets/sound/game-over.mp3'); 
 }
-
  
-
 function create() {
    const imgWhite = this.add.image(this.scale.width / 2, this.scale.height / 2, 'imgWhite').setInteractive();;
    const imgBG = this.add.image(this.scale.width / 2, this.scale.height / 2, 'imgBG').setInteractive();;
-
-
+ 
    var imgFlake01 = this.add.image(204, 46, 'imgFlake01').setInteractive();
    var imgFlake02 = this.add.image(95, 98, 'imgFlake02').setInteractive();
    var imgFlake03 = this.add.image(297, 132, 'imgFlake03').setInteractive();
@@ -164,7 +167,6 @@ function create() {
 
       flakeMe(); // Start the animation
   };
-    
 
   animateFlake(imgFlake01);
   animateFlake(imgFlake02);
@@ -189,6 +191,7 @@ function create() {
    soundBonus = this.sound.add('soundBonus', {loop: false,  volume: 0.5});
    soundTrophy = this.sound.add('soundTrophy', {loop: false,  volume: 0.5});
    soundDice = this.sound.add('soundDice', {loop: false,  volume: 0.3});
+   soundGameOver = this.sound.add('soundGameOver', {loop: false,  volume: 0.3});
 
     // Wait for user interaction to start audio
    this.input.once('pointerdown', (pointer) => {
@@ -214,6 +217,10 @@ function create() {
   imgPawn.setOrigin(0.5, 0.85);
 
   createChristmassBalls();
+
+   if(!nameOfThePlayer || nameOfThePlayer == null) {
+      nameOfThePlayer = '';
+   }
 
    this.add.text(75, 15, 'Merhaba ' + nameOfThePlayer, {
    fontFamily: 'Luckiest Guy',
@@ -282,7 +289,7 @@ function create() {
    imgDecreeUp.setVisible(false);
    imgDecreeDown.setVisible(false);
 
-   txtDecree = this.add.text(100, 250, '', {
+   txtDecree = this.add.text(100, 230, '', {
       fontFamily: 'Luckiest Guy',
       fontSize: '20px',
       color: '#303040',
@@ -290,6 +297,9 @@ function create() {
       align: 'left'
   });
   txtDecree.setAlpha(0);
+
+  imgOracle = this.add.image(0, 0, 'imgOracle').setInteractive();;
+  imgOracle.setVisible(false);
 
   var txtBilginEsme = this.add.text(270, 760, '© Bilgin Eşme 2024 ', {
    fontFamily: 'Arial',
@@ -302,6 +312,9 @@ function create() {
 
       shareGame('Hoşgeldin 2025', 'Yeni yıla eğlenceli bir giriş', 'https://bilginesme.github.io/hosgeldin-2025/');
    });
+
+   //openDecree('ZAR ATARAK KUTUCUKLARDA İLERLEYİN VE SÜRPRİZLERİ YAKALAYIN.\n\nPLATFORMUN SONUNA GELİDĞİNİZDE OYUN BİTMİŞ OLACAK.', 0, 0, 0);
+   startTheGameEndAnimation();
 }
 
 function update(time, delta) {
@@ -330,6 +343,9 @@ function createDice() {
 }
  
 function startDiceRollAnimation() {
+   if(isGameOver || isPawnMoving)
+      return;
+
    isDiceRollingNow = true;   
    const animationDuration = 1000; // Total duration in milliseconds
    const interval = 100; // Time interval in milliseconds
@@ -358,12 +374,17 @@ function startDiceRollAnimation() {
    }, interval);
 }
 
+const endGameLocation = { x:105, y:156 };
+
 function diceRoll(diceNumber) {
    var posPlayerPrevious = posPlayer;
 
    posPlayer+= diceNumber;
    if(posPlayer > (boardArray.length - 1)) {
-      posPlayer = posPlayer - (boardArray.length);
+      console.log('END THE GAME');
+      isGameOver = true;
+      //startTheGameEndAnimation();
+      //return;
    }
 
    let points = [];
@@ -375,7 +396,12 @@ function diceRoll(diceNumber) {
    }
    else {
       startPos = posPlayerPrevious + 1;
-      endPos = posPlayerPrevious + diceNumber + 1;
+      if(!isGameOver) {
+         endPos = posPlayerPrevious + diceNumber + 1;
+      }
+      else {
+         endPos = boardArray.length;
+      }
    } 
 
    for(var i = startPos; i < endPos; i++) {
@@ -383,12 +409,20 @@ function diceRoll(diceNumber) {
       boardCell = boardCellPositions[i]
       points.push({x: boardCell.x, y: boardCell.y});
    }
+
+   if(isGameOver) {
+      points.push(endGameLocation);
+
+      console.table(points);
+   }
    
    index = 0;
    movePawn(imgPawn, points);
 }
 
 function createBoardArray() {
+   let scene = currentScene; // Use the global scene variable
+
    boardArray[0] = 0;
    boardArray[1] = 0;
    boardArray[2] = 0;
@@ -475,8 +509,49 @@ function createBoardArray() {
       }
 
       if(strImg != '') {
-         var img = currentScene.add.image(pos.x, pos.y, strImg).setInteractive();
-         img.setOrigin(0.5, 0.9);
+         let trophyImage = currentScene.add.image(pos.x, pos.y, strImg).setInteractive();
+         let trophyName = getTrophyName(trophy);
+         trophyImage.setOrigin(0.5, 0.9);
+
+         trophyImage.on('pointerdown', () => {
+            scene.tweens.add({
+               targets: trophyImage,
+               scaleX: 2.0, 
+               scaleY: 2.0,
+               duration: 250, // Duration of the scaling up
+               yoyo: true, // Return to normal size
+               ease: 'Power1', // Smooth easing effect
+               onComplete: () => {
+                  let trophyText = scene.add.text(trophyImage.x, trophyImage.y - 50, trophyName, {fontFamily: 'Luckiest Guy', fontSize: '20px', color: '#ffffff'});
+                  trophyText.setOrigin(0.5, 0.5);
+
+                  scene.tweens.add({
+                     targets: trophyText,
+                     scaleX: 1,
+                     scaleY: 1,
+                     alpha: 1,
+                     duration: 1000, 
+                     ease: 'Bounce.easeOut',
+                     onStart: () => {
+                        trophyText.setScale(0); 
+                        trophyText.setAlpha(1); 
+                     },
+                     onComplete: () => {
+                        scene.tweens.add({
+                           targets: trophyText,
+                           alpha: 0,
+                           duration: 2000, 
+                           ease: 'Power1',
+                           onComplete: () => {
+                              trophyText.destroy(); 
+                           }
+                        });
+                     }
+                  });
+               }
+         });
+      
+         });
       }
    }
 }
@@ -486,7 +561,7 @@ function createChristmassBalls() {
    imgChristmasBall1 = scene.add.image(50, -20, 'imgChristmasBall1').setInteractive();
    imgChristmasBall1.setOrigin(0.5, 0);
 
-   imgChristmasBall2 = scene.add.image(370, -20, 'imgChristmasBall2').setInteractive();
+   imgChristmasBall2 = scene.add.image(360, -20, 'imgChristmasBall2').setInteractive();
    imgChristmasBall2.setOrigin(0.5, 0);
    imgChristmasBall2.scale = 0.7;
 
@@ -535,7 +610,7 @@ function createChristmassBalls() {
            }
        });
 
-       const jokeText = scene.add.text(ball.x - 40, ball.y + ball.height, "DİKKAT \nKIRILABİLİR!", { fontFamily: 'Luckiest Guy', fontSize: '16px', fill: '#fff' });
+       const jokeText = scene.add.text(ball.x - 50, ball.y + ball.height, "DİKKAT \nKIRILABİLİR!", { fontFamily: 'Luckiest Guy', fontSize: '16px', fill: '#fff' });
          scene.time.delayedCall(2000, () => jokeText.destroy()); // Remove the text after 2 seconds
    });
 };
@@ -557,9 +632,11 @@ function getTrophyName(value) {
    return null; // Return null if value is not found
 }
 
+let isPawnMoving = false;
 let index = 0; // Define outside
 function movePawn(pawn, points) {
    let scene = currentScene; // Use the global scene variable
+   isPawnMoving = true;
 
    function moveToNextPoint() {
        if (index < points.length) {
@@ -570,7 +647,7 @@ function movePawn(pawn, points) {
                targets: pawn,
                x: point.x,
                y: point.y,
-               duration: 1000,
+               duration: 700,
                ease: 'Power2',
                onComplete: () => {
                    index++; // Increment the index
@@ -579,9 +656,8 @@ function movePawn(pawn, points) {
            });
        }
        else {
-
-         console.log('Display the trophy');
-         if(boardArray[posPlayer] != 0) {
+         isPawnMoving = false;
+         if(boardArray[posPlayer] > 0) {
             var tt = boardArray[posPlayer];
           
             if (trophyMap.has(tt)) {
@@ -592,9 +668,78 @@ function movePawn(pawn, points) {
         
            trophyMap = sortTrophiesByHits(trophyMap);
            if(tt == TrophyTypes.BONUS) { addBonus(); }
-           else { drawTrophies(); }
-         }
+           else { 
 
+            let trophyTextShadow = scene.add.text(205, 205, getTrophyName(tt), {fontFamily: 'Luckiest Guy', fontSize: '75px', color: '#505050'});
+            trophyTextShadow.setOrigin(0.5, 0.5);
+
+            let trophyText = scene.add.text(200, 200, getTrophyName(tt), {fontFamily: 'Luckiest Guy', fontSize: '75px', color: '#ffffff'});
+            trophyText.setOrigin(0.5, 0.5);
+
+            scene.tweens.add({
+               targets: trophyText,
+               scaleX: 1,
+               scaleY: 1,
+               alpha: 1,
+               duration: 1000, 
+               ease: 'Bounce.easeOut',
+               onStart: () => {
+                  trophyText.setScale(0); 
+                  trophyText.setAlpha(1); 
+               },
+               onComplete: () => {
+                  setTimeout(() => {
+                     scene.tweens.add({
+                        targets: trophyText,
+                        alpha: 0,
+                        duration: 3000, 
+                        ease: 'Power1',
+                        onComplete: () => {
+                           trophyText.destroy(); 
+                        }
+                     });
+
+                  }, 2000);
+               }
+               });
+
+               scene.tweens.add({
+                  targets: trophyTextShadow,
+                  scaleX: 1,
+                  scaleY: 1,
+                  alpha: 1,
+                  duration: 1000, 
+                  ease: 'Bounce.easeOut',
+                  onStart: () => {
+                     trophyTextShadow.setScale(0); 
+                     trophyTextShadow.setAlpha(1); 
+                  },
+                  onComplete: () => {
+                     setTimeout(() => {
+                        scene.tweens.add({
+                           targets: trophyTextShadow,
+                           alpha: 0,
+                           duration: 3000, 
+                           ease: 'Power1',
+                           onComplete: () => {
+                              trophyTextShadow.destroy(); 
+                           }
+                        });
+   
+                     }, 2000);
+                  }
+                  });
+
+               drawTrophies(); 
+            }
+         }
+         else {
+            if(isGameOver) {
+               console.log('Display game over animation');
+               startTheGameEndAnimation();
+            }
+         }
+         
        }
    }
 
@@ -632,6 +777,8 @@ function drawTrophies() {
          txtTrophies[idxSlot].setText(strTrophy);
          idxSlot++;
       }
+
+
   });
 }
 
@@ -646,7 +793,7 @@ function addBonus() {
    bonusesObtained.push(strBonus);
    bonusDefinitions.splice(idxBonus, 1);
 
-   openDecree('BONUS \n\n' + strBonus);
+   openDecree('BONUS \n\n' + strBonus, 150, 460, 0.65);
 
    var idxSlot = imgBonuses.length;
    imgBonuses.push(scene.add.image(bonusSlotPositions[idxSlot].x, bonusSlotPositions[idxSlot].y, 'imgTrophyBonus').setInteractive());
@@ -668,8 +815,6 @@ function addBonus() {
    animateStar(img);
 
    img.on('pointerdown', () => {
-      console.log('Some bonus');
-
       scene.tweens.add({
          targets: img,
          scaleX: 3.0, 
@@ -678,15 +823,13 @@ function addBonus() {
          yoyo: true, // Return to normal size
          ease: 'Power1', // Smooth easing effect
          onComplete: () => {
-            console.log('Clicked and returned to normal size --> ' + idxSlot);
-            openDecree('BONUS \n\n' + bonusesObtained[idxSlot]);
+            openDecree('BONUS \n\n' + bonusesObtained[idxSlot], 150, 460, 0.65);
          }
-   });
-
+      });
    });
 }
 
-function openDecree(strText) {
+function openDecree(strText, oracleX, oracleY, oracleScale) {
    let scene = currentScene; // Use the global scene variable
    var posYStart = 200;
 
@@ -723,11 +866,23 @@ function openDecree(strText) {
             alpha: 1, // Fade to full visibility
             duration: 1000, // Duration of 1 second
             ease: 'Power1', // Easing for smooth animation
-            onComplete: () => {
-                console.log('Fade-in complete!');
-            }
-        });
-        
+            onComplete: () => {}});
+
+         if(oracleScale > 0) {
+            console.log('Display oracle');
+            imgOracle.setVisible(true);
+            imgOracle.setAlpha(0);
+            imgOracle.x = oracleX;
+            imgOracle.y = oracleY;
+            imgOracle.scaleX = oracleScale;
+            imgOracle.scaleY = oracleScale;
+            scene.tweens.add({
+               targets: imgOracle,
+               alpha: 0.6, // Fade to full visibility
+               duration: 1000, // Duration of 1 second
+               ease: 'Power1', // Easing for smooth animation
+               onComplete: () => {}});
+         }
      }
    });
 
@@ -745,6 +900,8 @@ function closeDecree() {
 
    txtDecree.setText('');
    txtDecree.setAlpha(0);
+   imgOracle.setAlpha(0);
+   imgOracle.setVisible(false);
 
    scene.tweens.add({
       targets: imgDecreePaper,
@@ -755,7 +912,6 @@ function closeDecree() {
       onComplete: () => {
          setTimeout(() => {
             isDecreeVisible = false;
-
             imgDecreeUp.setVisible(false);
             imgDecreeDown.setVisible(false);
             imgDecreePaper.setVisible(false);
@@ -770,7 +926,6 @@ function closeDecree() {
       ease: 'Sine.easeInOut',
       repeat: 0, 
    });
-
 }
 
 function doubleDigit(n) {
@@ -785,6 +940,52 @@ function doubleDigit(n) {
 
    return strResult;
 }
+
+function startTheGameEndAnimation() {
+   console.log('Starting the game end animation');
+
+   soundGameOver.play();
+
+   openDecree('BAŞKA YILLAR, BAŞKA ZAMANLAR YA DA BAŞKA BİRİNİN ŞANSI İÇİN TEKRAR OYNAYABİLİRSİNİZ.\n\nOYUNU BİR ARKADAŞINIZLA DA PAYLAŞABİLİRSİNİZ', 0, 0, 0);
+
+   let buttonReplay = currentScene.add.text(200, 470, 'YENİDEN OYNA', {fontFamily: 'Luckiest Guy', fontSize: '20px', color: '#006000'}).setInteractive();
+   buttonReplay.setOrigin(0.5, 0.5);
+
+   buttonReplay.on('pointerdown', () => {
+      currentScene.tweens.add({
+         targets:  buttonReplay,
+         scaleX: 2.0, 
+         scaleY: 2.0,
+         duration: 50, // Duration of the scaling up
+         yoyo: true, // Return to normal size
+         ease: 'Power1', // Smooth easing effect
+         onComplete: () => {
+            buttonReplay.setVisible(false);
+            buttonShare.setVisible(false);
+         }
+      });
+   });
+
+
+   let buttonShare = currentScene.add.text(200, 500, 'PAYLAŞ', {fontFamily: 'Luckiest Guy', fontSize: '20px', color: '#006000'}).setInteractive();
+   buttonShare.setOrigin(0.5, 0.5);
+
+   buttonShare.on('pointerdown', () => {
+      currentScene.tweens.add({
+         targets:  buttonShare,
+         scaleX: 2.0, 
+         scaleY: 2.0,
+         duration: 50, // Duration of the scaling up
+         yoyo: true, // Return to normal size
+         ease: 'Power1', // Smooth easing effect
+         onComplete: () => {
+            buttonReplay.setVisible(false);
+            buttonShare.setVisible(false);
+         }
+      });
+   });
+}
+
 
 async function shareGame(title, text, url) {
    // Check if the Web Share API is supported

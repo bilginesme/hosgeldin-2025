@@ -957,7 +957,7 @@ function openDecree(strText, decreeType) {
                      buttonHomePage.setVisible(false);
                      closeDecree();
                      alert('opening web site');
-                     window.open("https://google.com", "_blank");
+                     window.open("mailto:besme@esme.org");
                   }
                });
             });

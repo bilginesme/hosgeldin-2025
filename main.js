@@ -940,7 +940,7 @@ function openDecree(strText, decreeType) {
             });
          }
          else if(decreeType == DecreeTypes.Info) {
-            buttonHomePage = currentScene.add.text(200, 470, 'besme@esme.org', {fontFamily: 'Luckiest Guy', fontSize: '24px', color: '#006000'}).setInteractive();
+            buttonHomePage = currentScene.add.text(200, 470, 'WEB SİTEM', {fontFamily: 'Luckiest Guy', fontSize: '24px', color: '#006000'}).setInteractive();
             buttonHomePage.setOrigin(0.5, 0.5);
          
             buttonHomePage.on('pointerdown', () => {
@@ -956,7 +956,7 @@ function openDecree(strText, decreeType) {
                      buttonShare.setVisible(false);
                      buttonHomePage.setVisible(false);
                      closeDecree();
-                     window.open("mailto:besme@esme.org", "_blank");
+                     window.open("http://bilgin.esme.org", "_blank");
                   }
                });
             });

@@ -956,8 +956,8 @@ function openDecree(strText, decreeType) {
                      buttonShare.setVisible(false);
                      buttonHomePage.setVisible(false);
                      closeDecree();
-                     alert('opening web site 20:14');
-                     window.open("http://bilgin.esme.org", "self");
+                     alert('opening web site 20:18');
+                     window.open("mailto:besme@esme.org");
                   }
                });
             });

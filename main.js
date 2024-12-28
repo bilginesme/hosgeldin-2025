@@ -43,6 +43,9 @@ var imgDice;
 var imgPawn;
 var isDiceRollingNow = false;
 
+let isPawnMoving = false;
+let posPawnInitial = { x:110, y:770 };
+
 var isDecreeVisible = false;
 var imgDecreeUp, imgDecreeDown, imgDecreePaper;
 var imgOracle;
@@ -63,9 +66,16 @@ const TrophyTypes = Object.freeze({
    BONUS: 5
 });
 
+const DecreeTypes = Object.freeze({
+   None: 0,
+   Bonus: 1,
+   GameStart: 2,
+   GameEnd: 3,
+   Info: 4
+});
+
 const urlParams = new URLSearchParams(window.location.search);
 let nameOfThePlayer = urlParams.get('name');
-
 
 function preload() {
    currentScene = this;
@@ -206,17 +216,19 @@ function create() {
 
    this.input.on('pointerup', (pointer) => {
       if(isDecreeVisible) {
-         closeDecree();  
+         // closeDecree();
+         // REMOVE THIS IF NOT NEEDED  
       }
    });
 
    createDice.call();
-  createBoardArray.call();
+   createBoardArray.call();
 
-  imgPawn = this.add.image(110, 770, 'imgPawn').setInteractive();
-  imgPawn.setOrigin(0.5, 0.85);
+   
+   imgPawn = this.add.image(posPawnInitial.x, posPawnInitial.y, 'imgPawn').setInteractive();
+   imgPawn.setOrigin(0.5, 0.85);
 
-  createChristmassBalls();
+   createChristmassBalls();
 
    if(!nameOfThePlayer || nameOfThePlayer == null) {
       nameOfThePlayer = '';
@@ -260,24 +272,7 @@ function create() {
    }
 
    imgBonuses = [];
-   //for( var i = 0; i < bonusSlotPositions.length; i++) {
-   //   imgBonuses.push(this.add.image(bonusSlotPositions[i].x, bonusSlotPositions[i].y, 'imgTrophyBonus').setInteractive());
-   //}
-
-   bonusDefinitions.push('UZUN BİR SEYAHAT.');
-   bonusDefinitions.push('BEKLENMEDİK YERDEN GELEN PARA.');
-   bonusDefinitions.push('UZUN SÜREDİR GÖRMEDİĞİN BİR ARKADAŞI GÖRECEKSİN.');
-   bonusDefinitions.push('UĞUR GETİRECEK BİR GÖKKUŞAĞI.');
-   bonusDefinitions.push('BİR HAYALİN GERÇEKLEŞECEK.');
-   bonusDefinitions.push('YENİ BİR ÇEVREYE KATILACAKSIN.');
-   bonusDefinitions.push('HAYATINI DEĞİŞTİRECEK HARİKA BİR FİLM İZLEYECEKSİN.');
-   bonusDefinitions.push('HAYATINI DEĞİŞTİRECEK HARİKA BİR KİTAP OKUYACAKSIN.');
-   bonusDefinitions.push('HİÇ TAHMİN ETMEDİĞİN BİRİNDEN HEDİYE ALACAKSIN.');
-   bonusDefinitions.push('UZUN SÜREDİR KAYIP OLAN ÇOK SEVDİĞİN BİR EŞYANI BULACAKSIN.');
-   bonusDefinitions.push('BU YIL ÇOK GÜZEL YERLERDE PARK YERİ BULACAKSIN.');
-   bonusDefinitions.push('ÇOK HOŞ BİR FESTİVALE KATILACAKSIN.');
-   bonusDefinitions.push('TANIMADIĞIN BİRİNDEN ÇOK BÜYÜK BİR İYİLİK GÖRECEKSİN.');
-   bonusDefinitions.push('UZUN SÜERDİR ÇÖZEMEDİĞİN BİR ŞEYİ SONUNDA ÇÖZECEKSİN.');
+   createBonusDefinitions();
 
    bonusesObtained = [];
 
@@ -308,13 +303,12 @@ function create() {
    txtBilginEsme.setAlpha(0.8);
 
    txtBilginEsme.on('pointerdown', () => {
-      console.log('Share');
-
-      shareGame('Hoşgeldin 2025', 'Yeni yıla eğlenceli bir giriş', 'https://bilginesme.github.io/hosgeldin-2025/');
+      openDecree('MERHABA, BEN BİLGİN EŞME.\n\nUMARIM ÇOK GÜZEL BİR YIL GEÇİRİRSİNİZ\n\nOYUNU ARKADAŞLARINIZLA PAYLAŞABİLİRSİNİZ.', DecreeTypes.Info);
    });
 
-   //openDecree('ZAR ATARAK KUTUCUKLARDA İLERLEYİN VE SÜRPRİZLERİ YAKALAYIN.\n\nPLATFORMUN SONUNA GELİDĞİNİZDE OYUN BİTMİŞ OLACAK.', 0, 0, 0);
-   startTheGameEndAnimation();
+   let strTRext = 'ZAR ATARAK KUTUCUKLARDA İLERLEYİN VE SÜRPRİZLERİ YAKALAYIN.\n\nPLATFORMUN SONUNA GELDİĞİNİZDE OYUN BİTMİŞ OLACAK.';
+   openDecree(strTRext, DecreeTypes.GameStart);
+   //startTheGameEndAnimation();
 }
 
 function update(time, delta) {
@@ -381,10 +375,7 @@ function diceRoll(diceNumber) {
 
    posPlayer+= diceNumber;
    if(posPlayer > (boardArray.length - 1)) {
-      console.log('END THE GAME');
       isGameOver = true;
-      //startTheGameEndAnimation();
-      //return;
    }
 
    let points = [];
@@ -412,8 +403,6 @@ function diceRoll(diceNumber) {
 
    if(isGameOver) {
       points.push(endGameLocation);
-
-      console.table(points);
    }
    
    index = 0;
@@ -556,6 +545,25 @@ function createBoardArray() {
    }
 }
 
+function createBonusDefinitions() {
+   bonusDefinitions = [];
+
+   bonusDefinitions.push('UZUN BİR SEYAHAT.');
+   bonusDefinitions.push('BEKLENMEDİK YERDEN GELEN PARA.');
+   bonusDefinitions.push('UZUN SÜREDİR GÖRMEDİĞİN BİR ARKADAŞI GÖRECEKSİN.');
+   bonusDefinitions.push('UĞUR GETİRECEK BİR GÖKKUŞAĞI.');
+   bonusDefinitions.push('BİR HAYALİN GERÇEKLEŞECEK.');
+   bonusDefinitions.push('YENİ BİR ÇEVREYE KATILACAKSIN.');
+   bonusDefinitions.push('HAYATINI DEĞİŞTİRECEK HARİKA BİR FİLM İZLEYECEKSİN.');
+   bonusDefinitions.push('HAYATINI DEĞİŞTİRECEK HARİKA BİR KİTAP OKUYACAKSIN.');
+   bonusDefinitions.push('HİÇ TAHMİN ETMEDİĞİN BİRİNDEN HEDİYE ALACAKSIN.');
+   bonusDefinitions.push('UZUN SÜREDİR KAYIP OLAN ÇOK SEVDİĞİN BİR EŞYANI BULACAKSIN.');
+   bonusDefinitions.push('BU YIL ÇOK GÜZEL YERLERDE PARK YERİ BULACAKSIN.');
+   bonusDefinitions.push('ÇOK HOŞ BİR FESTİVALE KATILACAKSIN.');
+   bonusDefinitions.push('TANIMADIĞIN BİRİNDEN ÇOK BÜYÜK BİR İYİLİK GÖRECEKSİN.');
+   bonusDefinitions.push('UZUN SÜERDİR ÇÖZEMEDİĞİN BİR ŞEYİ SONUNDA ÇÖZECEKSİN.');
+}
+
 function createChristmassBalls() {
    let scene = currentScene; // Use the global scene variable
    imgChristmasBall1 = scene.add.image(50, -20, 'imgChristmasBall1').setInteractive();
@@ -632,7 +640,6 @@ function getTrophyName(value) {
    return null; // Return null if value is not found
 }
 
-let isPawnMoving = false;
 let index = 0; // Define outside
 function movePawn(pawn, points) {
    let scene = currentScene; // Use the global scene variable
@@ -642,7 +649,10 @@ function movePawn(pawn, points) {
        if (index < points.length) {
            let point = points[index];
            soundPawn.play();
-
+           
+           if(points.length == 1)
+            isPawnMoving = false;
+           
            scene.tweens.add({
                targets: pawn,
                x: point.x,
@@ -651,6 +661,10 @@ function movePawn(pawn, points) {
                ease: 'Power2',
                onComplete: () => {
                    index++; // Increment the index
+                   if(index >= points.length - 1) {
+                     isPawnMoving = false;
+                   }
+                     
                    moveToNextPoint(); // Call recursively
                }
            });
@@ -669,7 +683,6 @@ function movePawn(pawn, points) {
            trophyMap = sortTrophiesByHits(trophyMap);
            if(tt == TrophyTypes.BONUS) { addBonus(); }
            else { 
-
             let trophyTextShadow = scene.add.text(205, 205, getTrophyName(tt), {fontFamily: 'Luckiest Guy', fontSize: '75px', color: '#505050'});
             trophyTextShadow.setOrigin(0.5, 0.5);
 
@@ -692,14 +705,13 @@ function movePawn(pawn, points) {
                      scene.tweens.add({
                         targets: trophyText,
                         alpha: 0,
-                        duration: 3000, 
+                        duration: 2000, 
                         ease: 'Power1',
                         onComplete: () => {
                            trophyText.destroy(); 
                         }
                      });
-
-                  }, 2000);
+                  }, 500);
                }
                });
 
@@ -719,14 +731,13 @@ function movePawn(pawn, points) {
                         scene.tweens.add({
                            targets: trophyTextShadow,
                            alpha: 0,
-                           duration: 3000, 
+                           duration: 2000, 
                            ease: 'Power1',
                            onComplete: () => {
                               trophyTextShadow.destroy(); 
                            }
                         });
-   
-                     }, 2000);
+                     }, 500);
                   }
                   });
 
@@ -735,14 +746,13 @@ function movePawn(pawn, points) {
          }
          else {
             if(isGameOver) {
-               console.log('Display game over animation');
                startTheGameEndAnimation();
             }
          }
          
        }
    }
-
+ 
    moveToNextPoint();
 }
 
@@ -777,8 +787,6 @@ function drawTrophies() {
          txtTrophies[idxSlot].setText(strTrophy);
          idxSlot++;
       }
-
-
   });
 }
 
@@ -793,7 +801,7 @@ function addBonus() {
    bonusesObtained.push(strBonus);
    bonusDefinitions.splice(idxBonus, 1);
 
-   openDecree('BONUS \n\n' + strBonus, 150, 460, 0.65);
+   openDecree(strBonus, DecreeTypes.Bonus);
 
    var idxSlot = imgBonuses.length;
    imgBonuses.push(scene.add.image(bonusSlotPositions[idxSlot].x, bonusSlotPositions[idxSlot].y, 'imgTrophyBonus').setInteractive());
@@ -823,24 +831,25 @@ function addBonus() {
          yoyo: true, // Return to normal size
          ease: 'Power1', // Smooth easing effect
          onComplete: () => {
-            openDecree('BONUS \n\n' + bonusesObtained[idxSlot], 150, 460, 0.65);
+            openDecree(bonusesObtained[idxSlot], DecreeTypes.Bonus);
          }
       });
    });
 }
 
-function openDecree(strText, oracleX, oracleY, oracleScale) {
+function openDecree(strText, decreeType) {
+   if(isDecreeVisible)
+      return;
+
    let scene = currentScene; // Use the global scene variable
    var posYStart = 200;
 
    imgDecreeUp.x = scene.scale.width / 2;
    imgDecreeUp.y = posYStart;
-   //imgDecreeUp.setAlpha(0.5);
    imgDecreeUp.setVisible(true);
 
    imgDecreeDown.x = imgDecreeUp.x;
    imgDecreeDown.y = imgDecreeUp.y + imgDecreeUp.height + 10;
-   //imgDecreeDown.setAlpha(0.5);
    imgDecreeDown.setVisible(true);
 
    imgDecreePaper.x = imgDecreeUp.x;
@@ -848,6 +857,11 @@ function openDecree(strText, oracleX, oracleY, oracleScale) {
    imgDecreePaper.setOrigin(0.5, 0);
    imgDecreePaper.setVisible(true);
    imgDecreePaper.scaleY = 0.05;
+
+   let buttonClose;
+   let buttonReplay;
+   let buttonShare;
+   let buttonHomePage;
 
    scene.tweens.add({
       targets: imgDecreePaper,
@@ -868,14 +882,13 @@ function openDecree(strText, oracleX, oracleY, oracleScale) {
             ease: 'Power1', // Easing for smooth animation
             onComplete: () => {}});
 
-         if(oracleScale > 0) {
-            console.log('Display oracle');
+         if(decreeType == DecreeTypes.Bonus) {
             imgOracle.setVisible(true);
             imgOracle.setAlpha(0);
-            imgOracle.x = oracleX;
-            imgOracle.y = oracleY;
-            imgOracle.scaleX = oracleScale;
-            imgOracle.scaleY = oracleScale;
+            imgOracle.x = 150;
+            imgOracle.y = 460;
+            imgOracle.scaleX = 0.65;
+            imgOracle.scaleY = 0.65;
             scene.tweens.add({
                targets: imgOracle,
                alpha: 0.6, // Fade to full visibility
@@ -883,12 +896,126 @@ function openDecree(strText, oracleX, oracleY, oracleScale) {
                ease: 'Power1', // Easing for smooth animation
                onComplete: () => {}});
          }
+         else if(decreeType == DecreeTypes.GameEnd) {
+            buttonReplay = currentScene.add.text(200, 500, 'YENİDEN OYNA', {fontFamily: 'Luckiest Guy', fontSize: '26px', color: '#006000'}).setInteractive();
+            buttonReplay.setOrigin(0.5, 0.5);
+         
+            buttonReplay.on('pointerdown', () => {
+               currentScene.tweens.add({
+                  targets:  buttonReplay,
+                  scaleX: 1.2, 
+                  scaleY: 1.2,
+                  duration: 100, // Duration of the scaling up
+                  yoyo: true, // Return to normal size
+                  ease: 'Power1', // Smooth easing effect
+                  onComplete: () => {
+                     buttonClose.setVisible(false);
+                     buttonReplay.setVisible(false);
+                     buttonShare.setVisible(false);
+                     closeDecree();
+                     playAgain();
+                  }
+               });
+            });
+         
+            buttonShare = currentScene.add.text(200, 535, 'PAYLAŞ', {fontFamily: 'Luckiest Guy', fontSize: '26px', color: '#006000'}).setInteractive();
+            buttonShare.setOrigin(0.5, 0.5);
+         
+            buttonShare.on('pointerdown', () => {
+               currentScene.tweens.add({
+                  targets:  buttonShare,
+                  scaleX: 1.2, 
+                  scaleY: 1.2,
+                  duration: 100, // Duration of the scaling up
+                  yoyo: true, // Return to normal size
+                  ease: 'Power1', // Smooth easing effect
+                  onComplete: () => {
+                     buttonClose.setVisible(false);
+                     buttonReplay.setVisible(false);
+                     buttonShare.setVisible(false);
+                     closeDecree();
+                     shareGame();
+                  }
+               });
+            });
+         }
+         else if(decreeType == DecreeTypes.Info) {
+            buttonHomePage = currentScene.add.text(200, 470, 'besme@esme.org', {fontFamily: 'Luckiest Guy', fontSize: '20px', color: '#006000'}).setInteractive();
+            buttonHomePage.setOrigin(0.5, 0.5);
+         
+            buttonHomePage.on('pointerdown', () => {
+               currentScene.tweens.add({
+                  targets:  buttonHomePage,
+                  scaleX: 1.2, 
+                  scaleY: 1.2,
+                  duration: 100, // Duration of the scaling up
+                  yoyo: true, // Return to normal size
+                  ease: 'Power1', // Smooth easing effect
+                  onComplete: () => {
+                     buttonClose.setVisible(false);
+                     buttonShare.setVisible(false);
+                     buttonHomePage.setVisible(false);
+                     closeDecree();
+                     window.open("mailto:yourname@example.com", "_blank");
+                  }
+               });
+            });
+
+            buttonShare = currentScene.add.text(200, 535, 'PAYLAŞ', {fontFamily: 'Luckiest Guy', fontSize: '26px', color: '#006000'}).setInteractive();
+            buttonShare.setOrigin(0.5, 0.5);
+            buttonShare.on('pointerdown', () => {
+               currentScene.tweens.add({
+                  targets:  buttonShare,
+                  scaleX: 1.2, 
+                  scaleY: 1.2,
+                  duration: 100, // Duration of the scaling up
+                  yoyo: true, // Return to normal size
+                  ease: 'Power1', // Smooth easing effect
+                  onComplete: () => {
+                     buttonClose.setVisible(false);
+                     buttonShare.setVisible(false);
+                     
+                     closeDecree();
+                     shareGame();
+                  }
+               });
+            });
+         }
+
+         buttonClose = currentScene.add.text(200, 600, 'KAPAT', {fontFamily: 'Luckiest Guy', fontSize: '32px', color: '#006000'}).setInteractive();
+         buttonClose.setOrigin(0.5, 0.5);
+         buttonClose.setVisible(true);
+
+         buttonClose.on('pointerdown', () => {
+            currentScene.tweens.add({
+               targets:  buttonClose,
+               scaleX: 1.2, 
+               scaleY: 1.2,
+               duration: 100, // Duration of the scaling up
+               yoyo: true, // Return to normal size
+               ease: 'Power1', // Smooth easing effect
+               onComplete: () => {
+                  buttonClose.setVisible(false);
+
+                  if(decreeType == DecreeTypes.GameEnd) {
+                     buttonReplay.setVisible(false);
+                     buttonShare.setVisible(false);
+                  }
+                  else if(decreeType == DecreeTypes.Info) {
+                     buttonHomePage.setVisible(false);
+                     buttonShare.setVisible(false);
+                  }
+
+                  closeDecree();
+               }
+            });
+         });
      }
    });
 
    scene.tweens.add({
       targets: imgDecreeDown,
-      y: 548, 
+      y: 655, 
       duration: 800, 
       ease: 'Sine.easeInOut',
       repeat: 0, 
@@ -942,54 +1069,38 @@ function doubleDigit(n) {
 }
 
 function startTheGameEndAnimation() {
-   console.log('Starting the game end animation');
-
    soundGameOver.play();
-
-   openDecree('BAŞKA YILLAR, BAŞKA ZAMANLAR YA DA BAŞKA BİRİNİN ŞANSI İÇİN TEKRAR OYNAYABİLİRSİNİZ.\n\nOYUNU BİR ARKADAŞINIZLA DA PAYLAŞABİLİRSİNİZ', 0, 0, 0);
-
-   let buttonReplay = currentScene.add.text(200, 470, 'YENİDEN OYNA', {fontFamily: 'Luckiest Guy', fontSize: '20px', color: '#006000'}).setInteractive();
-   buttonReplay.setOrigin(0.5, 0.5);
-
-   buttonReplay.on('pointerdown', () => {
-      currentScene.tweens.add({
-         targets:  buttonReplay,
-         scaleX: 2.0, 
-         scaleY: 2.0,
-         duration: 50, // Duration of the scaling up
-         yoyo: true, // Return to normal size
-         ease: 'Power1', // Smooth easing effect
-         onComplete: () => {
-            buttonReplay.setVisible(false);
-            buttonShare.setVisible(false);
-         }
-      });
-   });
-
-
-   let buttonShare = currentScene.add.text(200, 500, 'PAYLAŞ', {fontFamily: 'Luckiest Guy', fontSize: '20px', color: '#006000'}).setInteractive();
-   buttonShare.setOrigin(0.5, 0.5);
-
-   buttonShare.on('pointerdown', () => {
-      currentScene.tweens.add({
-         targets:  buttonShare,
-         scaleX: 2.0, 
-         scaleY: 2.0,
-         duration: 50, // Duration of the scaling up
-         yoyo: true, // Return to normal size
-         ease: 'Power1', // Smooth easing effect
-         onComplete: () => {
-            buttonReplay.setVisible(false);
-            buttonShare.setVisible(false);
-         }
-      });
-   });
+   let strText = 'BAŞKA YILLAR, BAŞKA ZAMANLAR YA DA BAŞKA BİRİNİN ŞANSI İÇİN TEKRAR OYNAYABİLİRSİNİZ.\n\nOYUNU BİR ARKADAŞINIZLA DA PAYLAŞABİLİRSİNİZ';
+   openDecree(strText, DecreeTypes.GameEnd);
 }
 
+function playAgain() {
+   trophyMap = new Map();
+   isGameOver = false;
+   posPlayer = -1;
+   isDiceRollingNow = false;
 
-async function shareGame(title, text, url) {
+   imgPawn.x = posPawnInitial.x;
+   imgPawn.y = posPawnInitial.y;
+
+   drawTrophies();
+
+   for(var i=0; i < imgBonuses.length; i++) {
+      imgBonuses[i].setVisible(false);   
+   }
+
+   imgBonuses = [];
+   bonusesObtained = [];
+   createBonusDefinitions();
+}
+
+async function shareGame() {
    // Check if the Web Share API is supported
    if (navigator.share) {
+      let title = 'Hoşgeldin 2025';
+      let text = 'Yeni yıla eğlenceli bir giriş';
+      let url = 'https://bilginesme.github.io/hosgeldin-2025/';
+
        try {
            await navigator.share({
                title: title,

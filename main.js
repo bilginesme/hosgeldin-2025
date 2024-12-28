@@ -52,11 +52,20 @@ var imgDecreeUp, imgDecreeDown, imgDecreePaper;
 var imgOracle;
 var txtDecree;
 
+let imgArrow;
+let txtArrow;
+let txtArrowShadow;
+
 var soundPawn;
 var soundBonus;
 var soundTrophy;
 var soundDice;
 var soundGameOver;
+
+let backgroundMusic;
+
+let inactivityTimer; // To store the timeout ID
+const inactivityTime = 15000; // 30 seconds -> 30000
 
 const TrophyTypes = Object.freeze({
    NONE: 0,
@@ -121,7 +130,10 @@ function preload() {
    this.load.image('imgWhite', 'assets/bg-white.png');
    this.load.image('imgDashedLine', 'assets/dashed-line.png');
    this.load.image('imgOracle', 'assets/oracle.png');
-   this.load.audio('backgroundMusic', 'assets/SilentJungleLong.mp3'); 
+
+   this.load.image('imgArrow', 'assets/arrow.png');
+
+   backgroundMusic = this.load.audio('backgroundMusic', 'assets/sound/new-year-bg.mp3'); 
    
 
    for(var i = 1; i <= 6; i++) {
@@ -215,10 +227,11 @@ function create() {
    const imgBoard = this.add.image(10, 150, 'imgBoard').setInteractive();
    imgBoard.setOrigin(0, 0);
 
-   const music = this.sound.add('backgroundMusic', {
+   backgroundMusic = this.sound.add('backgroundMusic', {
    loop: true,  // Loop the music
-   volume: 0.5  // Set the volume (0.0 to 1.0)
+   volume: 0.1  // Set the volume (0.0 to 1.0)
    });
+   backgroundMusic.play();
 
    soundPawn = this.sound.add('soundPawn', {loop: false,  volume: 0.5});
    soundBonus = this.sound.add('soundBonus', {loop: false,  volume: 0.5});
@@ -247,6 +260,50 @@ function create() {
    createDice.call();
    createBoardArray.call();
    
+   txtArrowShadow = this.add.text(23, 248, 'ZAR ATARAK\nDEVAM EDİN', {
+      fontFamily: 'Luckiest Guy',
+      fontSize: '24px',
+      align: 'center',
+      color: '#303030'}).setInteractive();
+  
+   txtArrowShadow.setVisible(false);
+
+   txtArrow = this.add.text(20, 245, 'ZAR ATARAK\nDEVAM EDİN', {
+      fontFamily: 'Luckiest Guy',
+      fontSize: '24px',
+      align: 'center',
+      color: '#FFFFFF'}).setInteractive();
+
+   txtArrow.setVisible(false);
+
+   imgArrow = this.add.image(150, 320, 'imgArrow').setInteractive();
+   imgArrow.setVisible(false);
+
+   const animateArrow = (flake) => {
+      const animateMe = () => {
+          // Tween to move the ball down
+          this.tweens.add({
+              targets: imgArrow,
+              duration: 600, 
+              x: 160,
+              ease: 'Sine.easeInOut', // Smooth easing
+              onComplete: () => {
+                  this.tweens.add({
+                      targets: imgArrow,
+                      duration: 600, 
+                      x: 150,
+                      ease: 'Sine.easeInOut',
+                      onComplete: animateMe // Loop by calling moveBall again
+                  });
+              }
+          });
+      };
+
+      animateMe(); // Start the animation
+   };
+   animateArrow();
+
+
    imgPawn = this.add.image(posPawnInitial.x, posPawnInitial.y, 'imgPawn').setInteractive();
    imgPawn.setOrigin(0.5, 0.85);
 
@@ -340,6 +397,7 @@ function create() {
       }
    });
 
+
    let strTRext = 'ZAR ATARAK KUTUCUKLARDA İLERLEYİN VE SÜRPRİZLERİ YAKALAYIN.\n\nPLATFORMUN SONUNA GELDİĞİNİZDE OYUN BİTMİŞ OLACAK.';
    openDecree(strTRext, DecreeTypes.GameStart);
    //startTheGameEndAnimation();
@@ -391,6 +449,8 @@ function create() {
          });
       }
    });
+
+   resetInactivityTimer();
 }
 
 function update(time, delta) {
@@ -419,6 +479,9 @@ function createDice() {
 }
  
 function startDiceRollAnimation() {
+   hideToolTip();
+   resetInactivityTimer();
+
    if(isGameOver || isPawnMoving)
       return;
 
@@ -700,7 +763,7 @@ function createChristmassBalls() {
            }
        });
 
-       const jokeText = scene.add.text(ball.x - 50, ball.y + ball.height, "DİKKAT \nKIRILABİLİR!", { fontFamily: 'Luckiest Guy', fontSize: '16px', fill: '#fff' });
+       const jokeText = scene.add.text(ball.x - 50, ball.y + ball.height, "DİKKAT \nKIRILABİLİR!", { fontFamily: 'Luckiest Guy', fontSize: '16px', fill: '#faf3cb' });
          scene.time.delayedCall(2000, () => jokeText.destroy()); // Remove the text after 2 seconds
    });
 };
@@ -1103,6 +1166,7 @@ function openDecree(strText, decreeType) {
                   }
 
                   closeDecree();
+                
                }
             });
          });
@@ -1138,6 +1202,8 @@ function closeDecree() {
             imgDecreeUp.setVisible(false);
             imgDecreeDown.setVisible(false);
             imgDecreePaper.setVisible(false);
+
+            displayToolTip();
         }, 300);
      }
    });
@@ -1165,6 +1231,7 @@ function doubleDigit(n) {
 }
 
 function startTheGameEndAnimation() {
+   backgroundMusic.pause();
    soundGameOver.play();
    let strText = 'BAŞKA YILLAR, BAŞKA ZAMANLAR YA DA BAŞKA BİRİNİN ŞANSI İÇİN TEKRAR OYNAYABİLİRSİNİZ.\n\nOYUNU BİR ARKADAŞINIZLA DA PAYLAŞABİLİRSİNİZ';
    openDecree(strText, DecreeTypes.GameEnd);
@@ -1192,6 +1259,36 @@ function playAgain() {
    imgBonuses = [];
    bonusesObtained = [];
    createBonusDefinitions();
+   resetInactivityTimer();
+
+   backgroundMusic.play();
+}
+
+function displayToolTip() {
+   if(isGameOver)
+      return;
+
+   imgArrow.setVisible(true);
+   txtArrow.setVisible(true);
+   txtArrowShadow.setVisible(true);
+}
+
+function hideToolTip() {
+   imgArrow.setVisible(false);
+   txtArrow.setVisible(false);
+   txtArrowShadow.setVisible(false);
+}
+
+function resetInactivityTimer() {
+   // Clear the existing timer
+   if (inactivityTimer) {
+      clearTimeout(inactivityTimer);
+   }
+
+   // Start a new timer
+   inactivityTimer = setTimeout(() => {
+      displayToolTip();
+   }, inactivityTime);
 }
 
 async function shareGame() {

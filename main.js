@@ -41,10 +41,11 @@ var isGameOver = false;
 var posPlayer = -1;
 var imgDice;
 var imgPawn;
+var imgQuestionMark;
 var isDiceRollingNow = false;
 
 let isPawnMoving = false;
-let posPawnInitial = { x:110, y:770 };
+let posPawnInitial = { x:120, y:760 };
 
 var isDecreeVisible = false;
 var imgDecreeUp, imgDecreeDown, imgDecreePaper;
@@ -80,7 +81,29 @@ let nameOfThePlayer = urlParams.get('name');
 function preload() {
    currentScene = this;
 
- const font = new FontFace('Luckiest Guy', 'url(assets/fonts/LuckiestGuy-Regular.ttf)');
+   // Create a "LOADING" text
+   const loadingText = this.add.text(200, 300, "HOŞGELDİN 2025\nYÜKLENİYOR", {
+      font: "32px Arial",
+      fill: "#ffffff",
+         align: "center"
+   }).setOrigin(0.5, 0.5);
+
+   const percentText = this.add.text(200, 370, "0%", {
+      font: "24px Arial",
+      fill: "#ffffff",
+   }).setOrigin(0.5, 0.5);
+
+   this.load.on("progress", (value) => {
+      percentText.setText(parseInt(value * 100) + "%");
+   });
+
+   // Remove loading elements when complete
+   this.load.on("complete", () => {
+      loadingText.destroy();
+      percentText.destroy();
+   });
+
+   const font = new FontFace('Luckiest Guy', 'url(assets/fonts/LuckiestGuy-Regular.ttf)');
 
     font.load().then(() => {
         // Add the font to the document
@@ -117,6 +140,7 @@ function preload() {
    this.load.image('imgTrophyBonus', 'assets/trophy-bonus.png');
 
    this.load.image('imgPawn', 'assets/pawn-red.png');
+   this.load.image('imgQuestionMark', 'assets/question-mark.png');
 
    this.load.image('imgDecreeUp', 'assets/decree-up.png');
    this.load.image('imgDecreeDown', 'assets/decree-down.png');
@@ -161,7 +185,6 @@ function create() {
               ease: 'Sine.easeInOut', // Smooth easing
               onComplete: () => {
                const randomAlphaReturn = Phaser.Math.FloatBetween(0.6, 1.0); // Random swing angle
-
                   this.tweens.add({
                       targets: flake,
                       y: flake.y - randomOffset, // Move back up
@@ -223,7 +246,6 @@ function create() {
 
    createDice.call();
    createBoardArray.call();
-
    
    imgPawn = this.add.image(posPawnInitial.x, posPawnInitial.y, 'imgPawn').setInteractive();
    imgPawn.setOrigin(0.5, 0.85);
@@ -296,19 +318,79 @@ function create() {
   imgOracle = this.add.image(0, 0, 'imgOracle').setInteractive();;
   imgOracle.setVisible(false);
 
-  var txtBilginEsme = this.add.text(270, 760, '© Bilgin Eşme 2024 ', {
+  var txtBilginEsme = this.add.text(215, 760, '© Bilgin Eşme 2024 ', {
    fontFamily: 'Arial',
-   fontSize: '14px',
+   fontSize: '20px',
    color: '#FFFFFF'}).setInteractive();
    txtBilginEsme.setAlpha(0.8);
 
    txtBilginEsme.on('pointerdown', () => {
-      openDecree('MERHABA, BEN BİLGİN EŞME.\n\nUMARIM ÇOK GÜZEL BİR YIL GEÇİRİRSİNİZ\n\nOYUNU ARKADAŞLARINIZLA PAYLAŞABİLİRSİNİZ.', DecreeTypes.Info);
+      if(!isDecreeVisible) {
+         this.tweens.add({
+            targets:  txtBilginEsme,
+            scaleY: 1.6,
+            duration: 100, // Duration of the scaling up
+            yoyo: true, // Return to normal size
+            ease: 'Power1', // Smooth easing effect
+            onComplete: () => {
+               soundPawn.play();
+               openInfoWindow();
+            }
+         });
+      }
    });
 
    let strTRext = 'ZAR ATARAK KUTUCUKLARDA İLERLEYİN VE SÜRPRİZLERİ YAKALAYIN.\n\nPLATFORMUN SONUNA GELDİĞİNİZDE OYUN BİTMİŞ OLACAK.';
    openDecree(strTRext, DecreeTypes.GameStart);
    //startTheGameEndAnimation();
+
+   imgQuestionMark = this.add.image(50, 750, 'imgQuestionMark').setInteractive();
+   imgQuestionMark.setOrigin(0.5, 0.5);
+ 
+   const animateQuestionMark = (flake) => {
+      const animateMe = () => {
+          const randomDuration = Phaser.Math.Between(500, 900); // Random duration
+          const randomAlpha = Phaser.Math.FloatBetween(0.6, 1.0); // Random swing angle
+
+          // Tween to move the ball down
+          this.tweens.add({
+              targets: imgQuestionMark,
+              duration: randomDuration, // Use random duration
+              alpha: randomAlpha,
+              ease: 'Sine.easeInOut', // Smooth easing
+              onComplete: () => {
+               const randomAlphaReturn = Phaser.Math.FloatBetween(0.6, 1.0); // Random swing angle
+                  this.tweens.add({
+                      targets: imgQuestionMark,
+                      duration: Phaser.Math.Between(500, 900), // Random duration for upward motion
+                      alpha: randomAlphaReturn,
+                      ease: 'Sine.easeInOut',
+                      onComplete: animateMe // Loop by calling moveBall again
+                  });
+              }
+          });
+      };
+
+      animateMe(); // Start the animation
+   };
+   animateQuestionMark();
+
+   imgQuestionMark.on('pointerdown', () => {
+      if(!isDecreeVisible) {
+         this.tweens.add({
+            targets:  imgQuestionMark,
+            scaleX: 1.5, 
+            scaleY: 1.5,
+            duration: 100, // Duration of the scaling up
+            yoyo: true, // Return to normal size
+            ease: 'Power1', // Smooth easing effect
+            onComplete: () => {
+               soundPawn.play();
+               openInfoWindow();
+            }
+         });
+      }
+   });
 }
 
 function update(time, delta) {
@@ -957,10 +1039,8 @@ function openDecree(strText, decreeType) {
                      buttonHomePage.setVisible(false);
                      closeDecree();
 
-                     alert('20:38');
-
                      if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.userAgent.includes("Mac OS")) {
-                        alert("Please ensure you have an email app configured to use this feature.");
+                        alert("Sisteminizde e-posta uygulaması yüklü olmayabilir.");
                      }
                      else {
                         console.log('MAIL OK');
@@ -989,7 +1069,8 @@ function openDecree(strText, decreeType) {
                   onComplete: () => {
                      buttonClose.setVisible(false);
                      buttonShare.setVisible(false);
-                     
+                     buttonHomePage.setVisible(false);
+
                      closeDecree();
                      shareGame();
                   }
@@ -1087,6 +1168,10 @@ function startTheGameEndAnimation() {
    soundGameOver.play();
    let strText = 'BAŞKA YILLAR, BAŞKA ZAMANLAR YA DA BAŞKA BİRİNİN ŞANSI İÇİN TEKRAR OYNAYABİLİRSİNİZ.\n\nOYUNU BİR ARKADAŞINIZLA DA PAYLAŞABİLİRSİNİZ';
    openDecree(strText, DecreeTypes.GameEnd);
+}
+
+function openInfoWindow() {
+   openDecree('MERHABA, BEN BİLGİN EŞME.\n\nUMARIM ÇOK GÜZEL BİR YIL GEÇİRİRSİNİZ\n\nOYUNU ARKADAŞLARINIZLA PAYLAŞABİLİRSİNİZ.', DecreeTypes.Info);
 }
 
 function playAgain() {

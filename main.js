@@ -956,6 +956,7 @@ function openDecree(strText, decreeType) {
                      buttonShare.setVisible(false);
                      buttonHomePage.setVisible(false);
                      closeDecree();
+                     alert('opening web site');
                      window.open("https://google.com", "_blank");
                   }
                });

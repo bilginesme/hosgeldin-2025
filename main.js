@@ -956,8 +956,14 @@ function openDecree(strText, decreeType) {
                      buttonShare.setVisible(false);
                      buttonHomePage.setVisible(false);
                      closeDecree();
-                     alert('opening web site 20:18');
-                     window.open("mailto:besme@esme.org");
+                     alert('opening web site 20:24');
+
+                     const subject = encodeURIComponent("Thanks for playing!");
+                     const body = encodeURIComponent("We hope you enjoyed the game!\n\nBest regards,\nYour Team");
+                     const email = "besme@esme.org";
+                     const mailtoLink = `mailto:${email}?subject=${subject}&body=${body}`;
+
+                     window.open(mailtoLink, "_self");
                   }
                });
             });

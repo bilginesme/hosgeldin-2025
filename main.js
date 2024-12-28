@@ -897,7 +897,7 @@ function openDecree(strText, decreeType) {
                onComplete: () => {}});
          }
          else if(decreeType == DecreeTypes.GameEnd) {
-            buttonReplay = currentScene.add.text(200, 500, 'YENİDEN OYNA', {fontFamily: 'Luckiest Guy', fontSize: '26px', color: '#006000'}).setInteractive();
+            buttonReplay = currentScene.add.text(200, 480, 'YENİDEN OYNA', {fontFamily: 'Luckiest Guy', fontSize: '26px', color: '#006000'}).setInteractive();
             buttonReplay.setOrigin(0.5, 0.5);
          
             buttonReplay.on('pointerdown', () => {
@@ -940,7 +940,7 @@ function openDecree(strText, decreeType) {
             });
          }
          else if(decreeType == DecreeTypes.Info) {
-            buttonHomePage = currentScene.add.text(200, 475, 'WEB SİTEM', {fontFamily: 'Luckiest Guy', fontSize: '24px', color: '#006000'}).setInteractive();
+            buttonHomePage = currentScene.add.text(200, 475, 'besme@esme.org', {fontFamily: 'Luckiest Guy', fontSize: '24px', color: '#006000'}).setInteractive();
             buttonHomePage.setOrigin(0.5, 0.5);
          
             buttonHomePage.on('pointerdown', () => {
@@ -956,10 +956,18 @@ function openDecree(strText, decreeType) {
                      buttonShare.setVisible(false);
                      buttonHomePage.setVisible(false);
                      closeDecree();
-                     alert('opening web site 20:24');
 
-                     const subject = encodeURIComponent("Thanks for playing!");
-                     const body = encodeURIComponent("We hope you enjoyed the game!\n\nBest regards,\nYour Team");
+                     alert('20:38');
+
+                     if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.userAgent.includes("Mac OS")) {
+                        alert("Please ensure you have an email app configured to use this feature.");
+                     }
+                     else {
+                        console.log('MAIL OK');
+                     }
+
+                     const subject = encodeURIComponent("Hosgeldin 2025");
+                     const body = encodeURIComponent("Umarım oyunu beğenmişsinizidir.\n\nYorumlarınızı bekliyorum,\nBilgin Eşme");
                      const email = "besme@esme.org";
                      const mailtoLink = `mailto:${email}?subject=${subject}&body=${body}`;
 

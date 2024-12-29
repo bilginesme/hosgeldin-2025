@@ -1469,7 +1469,7 @@ async function shareGame() {
    // Check if the Web Share API is supported
    if (navigator.share) {
       let title = 'Hoşgeldin 2025';
-      let text = 'Yeni yıla eğlenceli bir giriş\n';
+      let text = 'Yeni yıla şanslı bir başlangıç :)\n';
       let url = 'https://bilginesme.github.io/hosgeldin-2025/';
 
        try {

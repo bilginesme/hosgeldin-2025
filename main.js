@@ -1391,6 +1391,7 @@ function displayButtonReplay() {
             onComplete: () => {
                hideButtonReplay();
                playAgain();
+               displayToolTip();
             }
          });
       }

@@ -370,7 +370,7 @@ function create() {
    imgDecreeUp.setVisible(false);
    imgDecreeDown.setVisible(false);
 
-   txtDecree = this.add.text(105, 240, '', {
+   txtDecree = this.add.text(105, 235, '', {
       fontFamily: 'Luckiest Guy',
       fontSize: '20px',
       color: '#303040',
@@ -406,7 +406,7 @@ function create() {
          }
    });
 
-   let strTRext = 'ZAR ATARAK KUTUCUKLARDA İLERLEYİN VE SÜRPRİZLERİ YAKALAYIN.\n\nPLATFORMUN SONUNA GELDİĞİNİZDE OYUN BİTMİŞ OLACAK.';
+   let strTRext = 'YENİ YIL SİZE ŞANS GETİRSİN :)\n\nZAR ATARAK YOLDAKİ SÜRPRİZLERİ KEŞFEDİN.\n\nPLATFORMUN SONUNDA BAKALIM YOLCULUK SİZE NELERİ GETİRECEK.';
    openDecree(strTRext, DecreeTypes.GameStart);
    
    imgQuestionMark = this.add.image(50, 750, 'imgQuestionMark').setInteractive();
@@ -1286,7 +1286,7 @@ function doubleDigit(n) {
 function displayTheGameEndAnimation() {
    backgroundMusic.pause();
    soundGameOver.play();
-   let strText = 'İYİ SENELER!\n\nBAŞKA YILLAR, YA DA BAŞKA BİRİNİN ŞANSI İÇİN TEKRAR OYNAYABİLİRSİNİZ.\n\nOYUNU BİR ARKADAŞINIZLA DA PAYLAŞABİLİRSİNİZ';
+   let strText = 'HARİKA BİR SENE OLSUN!\n\nDAHA İYİ BİR ŞANS, YA DA BAŞKA BİRİ İÇİN TEKRAR OYNAYABİLİR- SİNİZ.\n\nEĞLENCEYİ BİR ARKADAŞINIZLA DA PAYLAŞABİLİRSİNİZ';
    openDecree(strText, DecreeTypes.GameEnd);
 }
 

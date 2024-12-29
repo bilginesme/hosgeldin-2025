@@ -57,6 +57,8 @@ let imgArrow;
 let txtArrow;
 let txtArrowShadow;
 
+let buttonReplay;
+
 var soundPawn;
 var soundGlossyClick;
 var soundBonus;
@@ -159,6 +161,8 @@ function preload() {
    this.load.image('imgDecreeUp', 'assets/decree-up.png');
    this.load.image('imgDecreeDown', 'assets/decree-down.png');
    this.load.image('imgDecreePaper', 'assets/decree-paper.png');
+
+   this.load.image('buttonReplay', 'assets/replay.png');
 
    this.load.audio('soundPawn', 'assets/sound/pawn.wav');
    this.load.audio('soundBonus', 'assets/sound/bonus.mp3');
@@ -404,10 +408,15 @@ function create() {
 
    let strTRext = 'ZAR ATARAK KUTUCUKLARDA İLERLEYİN VE SÜRPRİZLERİ YAKALAYIN.\n\nPLATFORMUN SONUNA GELDİĞİNİZDE OYUN BİTMİŞ OLACAK.';
    openDecree(strTRext, DecreeTypes.GameStart);
-
+   
    imgQuestionMark = this.add.image(50, 750, 'imgQuestionMark').setInteractive();
    imgQuestionMark.setOrigin(0.5, 0.5);
  
+   buttonReplay = this.add.image(125, 750, 'buttonReplay').setInteractive();
+   buttonReplay.setOrigin(0.5, 0.5);
+   hideButtonReplay();
+   
+
    const animateQuestionMark = (flake) => {
       const animateMe = () => {
           const randomDuration = Phaser.Math.Between(500, 900); // Random duration
@@ -495,7 +504,15 @@ function startDiceRollAnimation() {
    let elapsedTime = 0;
  
    let finalRoll = 0;
-   if(posPlayer > boardArray.length / 2 && trophyMap.size == 0) {
+   let hasNonBonus = false;
+   for (const key of trophyMap.keys()) {
+      if (key !== TrophyTypes.BONUS) {
+         hasNonBonus = true;
+         break; // Stop checking further
+      }
+   }
+
+   if(posPlayer > boardArray.length / 2 && !hasNonBonus) {
       console.log('Magic touch needed');
 
       let magicRoll = 0;
@@ -918,7 +935,7 @@ function movePawn(pawn, points) {
          }
          else {
             if(isGameOver) {
-               startTheGameEndAnimation();
+               displayTheGameEndAnimation();
             }
          }
          
@@ -1070,11 +1087,12 @@ function openDecree(strText, decreeType) {
                onComplete: () => {}});
          }
          else if(decreeType == DecreeTypes.GameEnd) {
-            buttonReplay = currentScene.add.text(200, 480, 'YENİDEN OYNA', {fontFamily: 'Luckiest Guy', fontSize: '26px', color: '#006000'}).setInteractive();
+            buttonReplay = currentScene.add.text(200, 500, 'YENİDEN OYNA', {fontFamily: 'Luckiest Guy', fontSize: '26px', color: '#006000'}).setInteractive();
             buttonReplay.setOrigin(0.5, 0.5);
          
             buttonReplay.on('pointerdown', () => {
                soundGlossyClick.play();
+               soundGameOver.pause();
                currentScene.tweens.add({
                   targets:  buttonReplay,
                   scaleX: 1.2, 
@@ -1092,7 +1110,7 @@ function openDecree(strText, decreeType) {
                });
             });
          
-            buttonShare = currentScene.add.text(200, 535, 'PAYLAŞ', {fontFamily: 'Luckiest Guy', fontSize: '26px', color: '#006000'}).setInteractive();
+            buttonShare = currentScene.add.text(200, 545, 'PAYLAŞ', {fontFamily: 'Luckiest Guy', fontSize: '26px', color: '#006000'}).setInteractive();
             buttonShare.setOrigin(0.5, 0.5);
          
             buttonShare.on('pointerdown', () => {
@@ -1109,6 +1127,7 @@ function openDecree(strText, decreeType) {
                      buttonReplay.setVisible(false);
                      buttonShare.setVisible(false);
                      closeDecree();
+                     displayButtonReplay();
                      shareGame();
                   }
                });
@@ -1192,6 +1211,7 @@ function openDecree(strText, decreeType) {
                   if(decreeType == DecreeTypes.GameEnd) {
                      buttonReplay.setVisible(false);
                      buttonShare.setVisible(false);
+                     displayButtonReplay();
                   }
                   else if(decreeType == DecreeTypes.Info) {
                      buttonHomePage.setVisible(false);
@@ -1263,10 +1283,10 @@ function doubleDigit(n) {
    return strResult;
 }
 
-function startTheGameEndAnimation() {
+function displayTheGameEndAnimation() {
    backgroundMusic.pause();
    soundGameOver.play();
-   let strText = 'BAŞKA YILLAR, BAŞKA ZAMANLAR YA DA BAŞKA BİRİNİN ŞANSI İÇİN TEKRAR OYNAYABİLİRSİNİZ.\n\nOYUNU BİR ARKADAŞINIZLA DA PAYLAŞABİLİRSİNİZ';
+   let strText = 'İYİ SENELER!\n\nBAŞKA YILLAR, YA DA BAŞKA BİRİNİN ŞANSI İÇİN TEKRAR OYNAYABİLİRSİNİZ.\n\nOYUNU BİR ARKADAŞINIZLA DA PAYLAŞABİLİRSİNİZ';
    openDecree(strText, DecreeTypes.GameEnd);
 }
 
@@ -1322,6 +1342,126 @@ function resetInactivityTimer() {
    inactivityTimer = setTimeout(() => {
       displayToolTip();
    }, inactivityTime);
+}
+
+function displayButtonReplay() {
+   buttonReplay.setVisible(true);
+
+   displayVanishingText('YENİDEN\nOYNA', 125, 685, '24px');
+
+   const animateButtonReplay = (button) => {
+      const animateMe = () => {
+          const randomDuration = Phaser.Math.Between(500, 900); // Random duration
+          const randomAlpha = Phaser.Math.FloatBetween(0.6, 1.0); // Random swing angle
+
+          // Tween to move the ball down
+          currentScene.tweens.add({
+              targets: buttonReplay,
+              duration: randomDuration, // Use random duration
+              alpha: randomAlpha,
+              ease: 'Sine.easeInOut', // Smooth easing
+              onComplete: () => {
+               const randomAlphaReturn = Phaser.Math.FloatBetween(0.6, 1.0); // Random swing angle
+               currentScene.tweens.add({
+                      targets: buttonReplay,
+                      duration: Phaser.Math.Between(500, 900), // Random duration for upward motion
+                      alpha: randomAlphaReturn,
+                      ease: 'Sine.easeInOut',
+                      onComplete: animateMe // Loop by calling moveBall again
+                  });
+              }
+          });
+      };
+
+      animateMe(); // Start the animation
+   };
+   
+   animateButtonReplay();
+
+   buttonReplay.on('pointerdown', () => {
+      if(!isDecreeVisible) {
+         soundGlossyClick.play();
+         currentScene.tweens.add({
+            targets:  buttonReplay,
+            scaleX: 1.5, 
+            scaleY: 1.5,
+            duration: 100, // Duration of the scaling up
+            yoyo: true, // Return to normal size
+            ease: 'Power1', // Smooth easing effect
+            onComplete: () => {
+               hideButtonReplay();
+               playAgain();
+            }
+         });
+      }
+   });
+   
+}
+
+function hideButtonReplay() {
+   buttonReplay.setVisible(false);
+}
+
+function displayVanishingText(strText, posX, posY, fontSize) {
+
+   let txtShadow = currentScene.add.text(posX + 3, posY + 3, strText, {fontFamily: 'Luckiest Guy', fontSize: fontSize, align:'center', color: '#505050'});
+   txtShadow.setOrigin(0.5, 0.5);
+
+   let txtNormal = currentScene.add.text(posX, posY, strText, {fontFamily: 'Luckiest Guy', fontSize: fontSize, align:'center', color: '#ffffff'});
+   txtNormal.setOrigin(0.5, 0.5);
+
+   currentScene.tweens.add({
+      targets: txtNormal,
+      scaleX: 1,
+      scaleY: 1,
+      alpha: 1,
+      duration: 1000, 
+      ease: 'Bounce.easeOut',
+      onStart: () => {
+         txtNormal.setScale(0); 
+         txtNormal.setAlpha(1); 
+      },
+      onComplete: () => {
+         setTimeout(() => {
+            currentScene.tweens.add({
+               targets: txtNormal,
+               alpha: 0,
+               duration: 2000, 
+               ease: 'Power1',
+               onComplete: () => {
+                  txtNormal.destroy(); 
+               }
+            });
+         }, 500);
+      }
+      });
+
+      currentScene.tweens.add({
+         targets: txtShadow,
+         scaleX: 1,
+         scaleY: 1,
+         alpha: 1,
+         duration: 1000, 
+         ease: 'Bounce.easeOut',
+         onStart: () => {
+            txtShadow.setScale(0); 
+            txtShadow.setAlpha(1); 
+         },
+         onComplete: () => {
+            setTimeout(() => {
+               currentScene.tweens.add({
+                  targets: txtShadow,
+                  alpha: 0,
+                  duration: 2000, 
+                  ease: 'Power1',
+                  onComplete: () => {
+                     txtShadow.destroy(); 
+                  }
+               });
+            }, 500);
+         }
+         });
+
 }
 
 async function shareGame() {
